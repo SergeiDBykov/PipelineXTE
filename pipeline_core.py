@@ -16,9 +16,9 @@ from glob import glob
 import os
 from scipy.optimize import curve_fit
 import shutil
-from Miscellaneous.TimeSeries.cross_corr import my_crosscorr
-from Miscellaneous.plot_spectra import Spectra
-from Miscellaneous.doppler_correction import correct_times
+from Misc.TimeSeries.cross_corr import my_crosscorr
+from Misc.plot_spectra import Spectra
+from Misc.doppler_correction import correct_times
 from subprocess import call
 
 def open_dir():
@@ -30,10 +30,9 @@ def open_dir_in_term():
 
 
 plt.ioff()
-#import seaborn as sns
-#sns.set(style="ticks")
-#sns.set(palette='pastel')
-#sns.set_palette("pastel")
+import seaborn as sns
+sns.set(style='ticks', palette='deep',context='notebook')
+
 
 
 RXTE_path='/Users/s.bykov/work/xray_pulsars/rxte/'
@@ -41,7 +40,7 @@ xspec_scripts_path='/Users/s.bykov/work/xray_pulsars/rxte/python_pca_pipeline/xs
 
 #for beautiful plot in ph_res_results
 results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
-filename='standard_pipeline_orb_corr_periods'
+filename='standard_pipeline'
 ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
 ObsParams_plot=ObsParams.sort_values('MJD_START')
 
@@ -777,7 +776,8 @@ class ObservationXTE():
     def std1_lc_orb_corr(self):
         os.chdir(self.out_path)
         os.chdir('products/std1_lc/')
-        correct_times('std1_0.1s_bary.lc')
+        import Misc
+        correct_times('std1_0.1s_bary.lc',Misc.doppler_correction.orb_params_v0332)
         os.system('mv std1_0.1s_bary.lc ./std1_0.1s_bary.lc_original')
         os.system('cp std1_0.1s_bary.lc_orb_corr ./std1_0.1s_bary.lc')
 
@@ -1298,8 +1298,33 @@ class ObservationXTE():
 
             ObsID=self.ObsID
             fig.savefig(f'Day{mjd}_ph_res_{ObsID}_{model}_orb_corr.png')
+            plt.close(fig)
+
+
+            matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/3
+            matplotlib.rcParams['figure.subplot.left']=0.1
+            matplotlib.rcParams['figure.subplot.bottom']=0.1
+            matplotlib.rcParams['figure.subplot.right']=0.9
+            matplotlib.rcParams['figure.subplot.top']=0.85
+            fig,ax_eqw=plt.subplots()
+            ax_efold=ax_eqw.twinx()
+
+            ax_efold.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
+            ax_eqw.errorbar(phase,eqw,eqw_err,color='r',drawstyle='steps-mid',alpha=0.6)
+
+            ax_eqw.set_ylabel('Fe Ka Eq. width, eV',color='r')
+            ax_efold.set_ylabel('Flux 7-12, 1e-8 cgs')
+            ax_eqw.set_xlabel('Phase')
+            ax_eqw.set_title(self.ObsID+f' ({datamode})')
+
+
+            fig.tight_layout()
+            sns.despine(fig,top=1,right=0)
+            fig.savefig(f'Day{mjd}_ph_res_{ObsID}_{model}_report.png',dpi=500)
+
 
             plt.close(fig)
+            plt.close('all')
 
 
 

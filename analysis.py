@@ -17,49 +17,42 @@ import os
 from scipy.optimize import curve_fit
 from PipelineXTE.pipeline_core import ObservationXTE
 
-from Miscellaneous import  doppler_correction as doppler
-from Miscellaneous.doppler_correction import  day2sec
+from Misc import  doppler_correction as doppler
+from Misc.doppler_correction import  day2sec
 
 
-font = {'family' : 'serif',
-        'weight' : 'normal',
-        'size'   : 11}
-
-
-matplotlib.rc('font', **font)
-matplotlib.rcParams['axes.linewidth'] = 1
-matplotlib.rcParams['xtick.top']=1
-matplotlib.rcParams['ytick.right']=1
-
-matplotlib.rcParams['figure.figsize'] = 6.6*4, 6.6*2
+matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
 matplotlib.rcParams['figure.subplot.left']=0.15
 matplotlib.rcParams['figure.subplot.bottom']=0.15
 matplotlib.rcParams['figure.subplot.right']=0.85
-matplotlib.rcParams['figure.subplot.top']=0.90
-#matplotlib.rcParams['text.usetex'] = True
-#matplotlib.rcParams['text.latex.unicode'] = True
+matplotlib.rcParams['figure.subplot.top']=0.95
+
+import seaborn as sns
+sns.set(style='ticks', palette='deep',context='notebook')
 
 plt.ion()
 
 def vals_and_errors(ObsParams,name,funct=lambda x: x):
-    val=ObsParams[name].values
-    hi=ObsParams[name+'_hi'].values-val
-    try:
-        low=val-ObsParams[name+'_lo'].values
-    except: #just stuoed error in var names in spe_info.txt
-        low=val-ObsParams[name+'_low'].values
+    if isinstance(ObsParams,pd.core.frame.DataFrame):
+        par,Min,Max=funct(ObsParams[name].values),funct(ObsParams[name+'_lo'].values),funct(ObsParams[name+'_hi'].values)
+    elif isinstance(ObsParams,pd.core.series.Series):
+        par,Min,Max=funct(ObsParams[name]),funct(ObsParams[name+'_lo']),funct(ObsParams[name+'_hi'])
+
+    low = par - Min
+    hi  =  Max - par
+    parr = par
 
     err=np.vstack((low,hi))
-    return val,err
+    #return np.array((parr,err))
+    return parr,err
 
 
 
 
+savepath='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/'
 results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
 
-filename='standard_pipeline_orb_corr_periods' # standard_pipeline    standard_pipeline_free_sigma
-# standard_pipeline standard_pipeline_025sigma standard_pipeline_ign_12 standard_pipeline_sts_period
-#standard_pipeline_orb_corr_periods
+filename='standard_pipeline'
 ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
 ObsParams=ObsParams.sort_values('MJD_START')
 
@@ -67,8 +60,148 @@ ObsParams.period_orb_corr= ObsParams.period_orb_corr.replace(to_replace='None',v
 ObsParams.period_orb_corr_err= ObsParams.period_orb_corr_err.replace(to_replace='None',value=np.nan)
 
 
+ObsParams.loc[ObsParams.fasebin_cfg=='se','config']='E\_125us\_64M\_0\_1s'
+ObsParams.loc[ObsParams.fasebin_cfg=='sa','config']='B\_16ms\_46M\_0\_49\_H'
+ObsParams.loc[ObsParams.fasebin_cfg=='None','config']='-'
+#ObsParams[ObsParams.fasebin_cfg=='se']['config']='E\_125us\_64M\_0\_1s'
+#ObsParams['config']='E\_125us\_64M\_0\_1s' if ObsParams.fasebin_cfg=='se'
+#B\_16ms\_46M\_0\_49\_H
 STOP
 
+
+#%%plot flux and period stuff
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+ax.errorbar(time,flux,flux_err,fmt='.',color='b',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('RXTE/PCA Flux (3-12 keV), \n 10^(-8) cgs',color='b')
+ax.set_xlabel('Time, MJD')
+
+
+ax_period=ax.twinx()
+
+period=ObsParams.period_orb_corr
+
+factor=doppler.kepler_solution(time*day2sec, doppler.orb_params_v0332)[3]
+period_bary=factor*ObsParams.period_orb_corr
+
+
+ax_period.plot(time,period,color='g',marker='s',ls='',ms=4,alpha=0.8)
+ax_period.plot(time,period_bary,color='m',marker='.',ls='',ms=2,alpha=0.6)
+
+ax_period.set_ylabel('Period, s',color='g')
+ax_period.set_ylim(4.373,4.377)
+
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'flux_and_period.png',dpi=500)
+
+plt.show()
+
+
+
+
+#%% plot eqw stuff
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,label='Sigma=0.3 keV',alpha=0.8)
+
+
+# eqw,eqw_err=vals_and_errors(ObsParams,'comptt_gabslog_eqw_gaussian',funct=lambda x: 1e3*x)
+
+# ax.errorbar(time,eqw,eqw_err,fmt='.',color='y',marker='s',ms=4,label='Sigma free',alpha=0.8)
+
+#ax.legend(loc='best')
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+ax.set_xlabel('Time, MJD')
+ax.set_ylim(40,120)
+
+
+
+
+from Misc.doppler_correction import orb_params_v0332
+T_p=orb_params_v0332['T_p']/86400
+P=orb_params_v0332['P']/86400
+
+
+for i in range(1,4):
+    ax.axvline(T_p+(i-114)*P,color='k',ls=':',alpha=0.3)
+
+
+
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw.png',dpi=500)
+plt.show()
+
+
+
+#%% latex table
+from Misc.TeX_Tables import pandas_to_tex
+from Misc.TeX_Tables.pandas_to_tex import *
+
+model='cutoffpl_'
+def tex_tbl():
+    null=lambda x: x
+    free_columns=['ObsID','MJD_START','EXPOSURE','config',model+'chi2']
+    free_columns_functions=[null,null,null,null,null]
+    free_columns_formats=[0,1,0,0,2]
+
+    err_columns=['eqw','tot_flux',
+                 ]
+    err_functions=[lambda x: 1000*x, lambda x: x/1e-9,
+                   ]
+    err_formats=[0,2]
+
+    err_columns=[model+item for item in err_columns]
+
+    headers=['ObsID','Time, MJD','Exposure, s','Configuration','$\chi^2_{red}$',
+                  'Eq. width', 'Flux (3-12 keV)'
+                 ]
+
+    transpose=0
+    df_tex=make_latex_table(df,
+                          free_columns=free_columns, free_columns_functions=free_columns_functions,
+                          free_columns_formats=free_columns_formats,
+                          err_columns=err_columns, err_functions=err_functions,
+                          err_formats=err_formats)
+    df_tex.columns=headers
+    save_latex_table(df_tex, savepath=savepath+'/tex/allpars_'+name+'.tex',
+                     columns_to_write='DEFAULT',
+                     columns_names='DEFAULT',
+                     transpose=transpose)
+df=ObsParams
+tex_tbl()
+
+
+
+
+#%% OLD
+
+
+'''
 #%% spe_pars_stuff
 
 
@@ -444,3 +577,5 @@ temp.to_latex(buf=results_path+f'latex_{filename}.txt',
               formatters=[lambda x: x ,frm2 ,lambda x: x,lambda x: x,frm2,frm2],
               index=False,escape=1)
 
+
+'''
