@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['pipeline_core.py', 'pipeline_run.py', '../../../xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res_cutoffpl_ign11.txt']
+recent_files = ['Eqw_timeseries/core_for_eqw.py', 'Eqw_timeseries/analysis_eqw.py', 'analysis.py', 'pipeline_core.py', 'pipeline_run.py']
 

@@ -68,6 +68,13 @@ ObsParams.loc[ObsParams.fasebin_cfg=='None','config']='-'
 #B\_16ms\_46M\_0\_49\_H
 STOP
 
+#%% fun with correlations
+
+corrdata=ObsParams[['cutoffpl_efold','cutoffpl_eline','cutoffpl_eqw',
+                    'cutoffpl_fe_flux','cutoffpl_po','cutoffpl_tot_flux',
+                   'deltat' ]]
+
+sns.heatmap(corrdata.corr(),cmap='jet')
 
 #%%plot flux and period stuff
 
@@ -106,13 +113,24 @@ ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'flux_and_period.png',dpi=500)
+def gauss(t,t0,sigma,N):
+    return N*np.exp(-(t-t0)**2/(2*sigma**2))
+
+from scipy.optimize import curve_fit
+
+popt,pcov=curve_fit(gauss,time[time<53385],flux[time<53385],p0=[53370,20,3])
+
+ax.plot(time,gauss(time,*popt),'k:',label='')
 
 plt.show()
 
 
 
 
-#%% plot eqw stuff
+
+
+
+#%% plot eqw vs time stuff
 
 fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
 
@@ -123,11 +141,6 @@ eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
 ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,label='Sigma=0.3 keV',alpha=0.8)
 
 
-# eqw,eqw_err=vals_and_errors(ObsParams,'comptt_gabslog_eqw_gaussian',funct=lambda x: 1e3*x)
-
-# ax.errorbar(time,eqw,eqw_err,fmt='.',color='y',marker='s',ms=4,label='Sigma free',alpha=0.8)
-
-#ax.legend(loc='best')
 ax.set_ylabel('Iron line equivalent width \n eV',color='k')
 ax.set_xlabel('Time, MJD')
 ax.set_ylim(40,120)
@@ -154,6 +167,277 @@ ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'eqw.png',dpi=500)
+plt.show()
+
+
+#%% plot eqw vs flux
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+ax.errorbar(flux,eqw,eqw_err,flux_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+ax.set_xlabel('RXTE/PCA Flux (3-12 keV), \n 10^(-8) cgs')
+ax.set_ylim(40,120)
+
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_vs_flux.png',dpi=500)
+plt.show()
+
+#%% plot eqw vs distance
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+orbtime=time
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+ax.errorbar(r,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+ax.set_xlabel('Distance to the companion, \n lt-sec.')
+ax.set_ylim(40,120)
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_vs_dist.png',dpi=500)
+plt.show()
+
+#%% plot eqw vs time vs distance
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+ax.set_ylim(50,110)
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+orbtime=np.linspace(53335,53420,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.')
+
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_vs_dist_in_time.png',dpi=500)
+plt.show()
+
+#%% plot eqw vs time vs flux
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+ax.set_ylim(50,110)
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+
+
+ax2=ax.twinx()
+
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+ax2.errorbar(time,flux,flux_err,fmt='.',color='g',marker='s',ms=4,alpha=0.8)
+
+ax2.set_ylabel('RXTE/PCA Flux (3-12 keV), \n 10^(-8) cgs',color='b')
+
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_vs_flux_in_time.png',dpi=500)
+plt.show()
+
+
+
+
+
+#%% plot eqw vs time with orbital convolution
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+ax.set_xlabel('Time, MJD')
+ax.set_ylim(40,120)
+
+
+orbtime=np.linspace(53330,53420,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+#popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
+#popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
+popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
+
+gaussian_depend=gauss(orbtime,popt[0],popt[1],100)
+inv=r**(-1)
+y=gaussian_depend+1000*(inv-np.mean(inv))
+
+ax.plot(orbtime,gaussian_depend,'b--')
+ax.plot(orbtime,y,'b-')
+
+ax.set_xlabel('Time, MJD')
+ax.set_ylabel('Equivalent width, eV')
+ax.legend(loc='best')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_dist_convolve.png',dpi=500)
+plt.show()
+
+
+#%% plot delay stuff vs time vs distance
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+deltat,deltat_err=ObsParams.deltat,ObsParams.deltat_err
+ax.errorbar(time,deltat,deltat_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width delay, sec',color='k')
+ax.set_xlabel('Time, MJD')
+
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+orbtime=np.linspace(53335,53420,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.')
+
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'delay.png',dpi=500)
+plt.show()
+
+
+
+#%% plot delay stuff vs flux
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+
+deltat,deltat_err=ObsParams.deltat,ObsParams.deltat_err
+
+
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+nu_412_flux,nu_412_flux_max_err=0.83,0.02#1.220422,1.220422-1.219378
+nu_deltat,nu_deltat_err=1.3,0.3
+
+ax.errorbar(flux,deltat,deltat_err,flux_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.errorbar(nu_412_flux,nu_deltat,nu_deltat_err,nu_412_flux_max_err,fmt='.',color='r',marker='s',ms=4,alpha=0.8,label='NuSTAR')
+
+
+ax.set_ylabel('Iron line equivalent width delay, sec',color='k')
+ax.set_xlabel('Flux 7-12')
+ax.legend()
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'delay_vs_flux.png',dpi=500)
+plt.show()
+
+
+
+#%% plot pulsed fractions vs time
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw_PF,eqw_PF_err=ObsParams.eqw_PF,ObsParams.eqw_PF_err
+ax.errorbar(time,eqw_PF,eqw_PF_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8,label='Eq. width')
+#ax.plot(time,eqw_PF,color='c',marker='s',ms=4,alpha=0.8,label='Eq. width')
+
+flux_gauss_PF,flux_gauss_PF_err=ObsParams.flux_gauss_PF,ObsParams.flux_gauss_PF_err
+ax.errorbar(time,flux_gauss_PF,flux_gauss_PF_err,fmt='.',color='r',marker='s',ms=4,alpha=0.8,label='Fe flux')
+#ax.plot(time,flux_gauss_PF,color='r',marker='s',ms=4,alpha=0.8,label='Fe flux')
+
+
+flux_712_PF,flux_712_PF_err=ObsParams.flux_712_PF,ObsParams.flux_712_PF_err
+ax.errorbar(time,flux_712_PF,flux_712_PF_err,fmt='.',color='g',marker='s',ms=4,alpha=0.8,label='7-12 Flux')
+
+
+ax.set_ylabel('Pulsed fraction',color='k')
+ax.set_xlabel('Time, MJD')
+ax.set_ylim(0,1)
+ax.legend()
+
+
+
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'pulsed_fractions.png',dpi=500)
 plt.show()
 
 
