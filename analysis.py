@@ -27,6 +27,7 @@ matplotlib.rcParams['figure.subplot.bottom']=0.15
 matplotlib.rcParams['figure.subplot.right']=0.85
 matplotlib.rcParams['figure.subplot.top']=0.95
 
+
 import seaborn as sns
 sns.set(style='ticks', palette='deep',context='notebook')
 
@@ -125,6 +126,38 @@ ax.plot(time,gauss(time,*popt),'k:',label='')
 plt.show()
 
 
+
+#%%plot flux continuum and iron
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+
+ax.errorbar(time,flux,flux_err,fmt='.',color='b',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='b')
+ax.set_xlabel('Time, MJD')
+
+
+ax_iron=ax.twinx()
+flux_iron,flux_err_iron=vals_and_errors(ObsParams,'cutoffpl_fe_flux',funct=lambda x: x/1e-10)
+
+ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',color='g',marker='s',ms=4,alpha=0.6,zorder=-1)
+
+
+ax_iron.set_ylabel('Iron line Flux, \n $10^{-10}$ cgs',color='g')
+
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+#ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'flux_cont_and_iron.pdf',dpi=500)
 
 
 
@@ -231,7 +264,7 @@ ax.set_ylim(50,110)
 
 ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
 ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
-ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+#ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 orbtime=np.linspace(53335,53420,200)
 r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
@@ -250,7 +283,7 @@ ax2.set_ylabel('Distance to the companion, \n lt-sec.')
 
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_vs_dist_in_time.png',dpi=500)
+plt.savefig(savepath+f'eqw_vs_dist_in_time.pdf',dpi=500)
 plt.show()
 
 #%% plot eqw vs time vs flux
@@ -270,7 +303,7 @@ ax.set_ylim(50,110)
 
 ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
 ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
-ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+#ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 
 
@@ -296,7 +329,7 @@ plt.show()
 
 #%% plot eqw vs time with orbital convolution
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
 time=ObsParams.MJD_START
 
@@ -314,42 +347,92 @@ r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
 #popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
 #popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
-popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
+#popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
+popt,pcov=curve_fit(gauss,time,eqw,p0=[53370,20,50])
 
-gaussian_depend=gauss(orbtime,popt[0],popt[1],100)
-inv=r**(-1)
-y=gaussian_depend+1000*(inv-np.mean(inv))
+gaussian_depend=gauss(orbtime,popt[0],popt[1],popt[2])
+inv=r**(-2)
+y=gaussian_depend+70000*(inv-np.mean(inv)) #2000 for d^(-1), 70000 for d^(-2)
 
-ax.plot(orbtime,gaussian_depend,'b--')
-ax.plot(orbtime,y,'b-')
+ax.plot(orbtime,gaussian_depend,'k--',alpha=0.7)
+ax.plot(orbtime,y,'k-',alpha=0.7)
 
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax.legend(loc='best')
 
 
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_dist_convolve.png',dpi=500)
+plt.savefig(savepath+f'eqw_dist_convolve.pdf',dpi=500)
 plt.show()
 
+
+
+#%% find observations after 53400 with small exposure in phase-resolved
+
+expos_ph_res=[]
+for ObsID in ObsParams.ObsID:
+    try:
+        ff=fits.open(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/fasebin_sys.pha')
+        exposure=ff[1].data['exposure'].mean()
+        expos_ph_res.append(exposure)
+    except:
+        expos_ph_res.append(0)
+
+expos_ph_res=np.array(expos_ph_res)
+
+for ex,obs,mjd, conf in zip(expos_ph_res,ObsParams.ObsID,ObsParams.MJD_START,ObsParams.fasebin_cfg):
+    print(f'{obs}: expo/phase bin {round(ex)}s (MJD {mjd}, conf {conf})')
+
+plt.figure()
+ObsParams.plot(x='MJD_START',y='EXPOSURE')
+
+plt.plot(ObsParams.MJD_START,expos_ph_res)
+
+plt.show()
+#bad periods or very small expo after 53400 mjd
+badpers=['90014-01-04-02','90014-01-04-03','90014-01-05-00']
+
+small_expo=['90014-01-05-03','90014-01-05-06','90014-01-06-02',
+            '90014-01-06-03','90014-01-07-01','90014-01-07-03',
+            '90014-01-07-02','90014-01-07-04','90014-01-07-00',
+            '90014-01-08-00','90014-01-08-01']
+
+#ignore_fasebin - '90014-01-05-03'
+ignored_obs=[
+'90014-01-05-03',
+'90014-01-05-06',
+'90014-01-06-00',
+'90014-01-07-01',
+'90014-01-07-03',
+'90014-01-07-02',
+'90014-01-07-00',
+'90014-01-08-00',
+'90014-01-08-01',
+'90014-01-06-03']
 
 #%% plot delay stuff vs time vs distance
 
 fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
 
-time=ObsParams.MJD_START
+df=ObsParams[~ObsParams.ObsID.isin(ignored_obs)]
 
-deltat,deltat_err=ObsParams.deltat,ObsParams.deltat_err
+deltat,deltat_err=df.deltat,df.deltat_err
+
+
+time=df.MJD_START
+
+deltat,deltat_err=df.deltat,df.deltat_err
 ax.errorbar(time,deltat,deltat_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
 
 ax.set_ylabel('Iron line equivalent width delay, sec',color='k')
 ax.set_xlabel('Time, MJD')
 
 
-ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
-ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
-ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+# ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+# ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+# ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 orbtime=np.linspace(53335,53420,200)
 r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
@@ -363,12 +446,9 @@ ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
 
 ax2.set_ylabel('Distance to the companion, \n lt-sec.')
 
-
-
-
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'delay.png',dpi=500)
+plt.savefig(savepath+f'delay.pdf',dpi=500)
 plt.show()
 
 
@@ -377,11 +457,11 @@ plt.show()
 
 fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
 
+df=ObsParams[(ObsParams.MJD_START<53400) | (ObsParams.EXPOSURE>1500)]
+deltat,deltat_err=df.deltat,df.deltat_err
 
-deltat,deltat_err=ObsParams.deltat,ObsParams.deltat_err
 
-
-flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+flux,flux_err=vals_and_errors(df,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
 
 nu_412_flux,nu_412_flux_max_err=0.83,0.02#1.220422,1.220422-1.219378
 nu_deltat,nu_deltat_err=1.3,0.3
@@ -430,9 +510,9 @@ ax.legend()
 
 
 
-ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
-ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
-ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+# ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+# ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+# ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 
 fig.tight_layout()
@@ -528,7 +608,7 @@ for model,color in zip(['cutoffpl'],['c']):
     #ObsParams.iloc[where(ObsParams.cutoffpl_chi2>2)[0]][['ObsID','MJD_START','cutoffpl_chi2']]
 ax.set_title(filename)
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax.legend(loc='best',fontsize=7)
 ax.grid()
 
@@ -548,7 +628,7 @@ ax.axvspan(53380,53380.8,alpha=0.1,color='blue')
 
 
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax.legend(loc='best',fontsize=7)
 ax.grid()
 plt.show()
@@ -592,7 +672,7 @@ plt.show()
 #
 #
 #ax.set_xlabel('Time, MJD')
-#ax.set_ylabel('Equivalent width, eV')
+#ax.set_ylabel('Equivalent width of iron line, eV')
 #ax.legend(loc='best',fontsize=7)
 #ax.grid()
 #plt.show()
@@ -721,7 +801,7 @@ ax2.plot(orbtime,inv,'b-.')
 
 
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax2.set_ylabel('Distance from the NS to the companion, lt-sec.')
 ax.legend(loc='best')
 ax.grid()
@@ -755,7 +835,7 @@ ax2.plot(orbtime,inv,'b-.')
 
 
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax2.set_ylabel('Distance from the NS to the companion, lt-sec.')
 ax.legend(loc='best')
 ax.grid()
@@ -792,7 +872,7 @@ ax.plot(orbtime,gaussian_depend_conv,'b:')
 #ax.plot(orbtime,y,'b:')
 
 ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width, eV')
+ax.set_ylabel('Equivalent width of iron line, eV')
 ax.legend(loc='best')
 ax.grid()
 plt.show()

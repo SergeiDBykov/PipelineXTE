@@ -306,7 +306,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
+            #xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
             xte_obs.ph_res_results()
 
         except Exception as e:
@@ -348,7 +348,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=12)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
+            #xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
             xte_obs.ph_res_results()
 
         except Exception as e:
@@ -400,7 +400,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
+            #xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
             xte_obs.ph_res_results()
 
         except Exception as e:
@@ -452,7 +452,7 @@ if input('start  calculation from the beginning?')=='y':
         print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
         try:
             xte_obs=ObservationXTE(ObsID)
-            #xte_obs.make_fasebin(nph=12)
+            xte_obs.make_fasebin(nph=8)
             xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
             xte_obs.ph_res_results()
 
@@ -539,6 +539,10 @@ ObsList=[
  '90427-01-04-04',
  '90427-01-04-05' ]
 
+#for paper plots
+ObsList=['90089-11-02-06','90089-11-02-04',
+         '90089-11-03-01G','90089-11-04-00G',
+         '90427-01-03-02','90014-01-02-10']
 
 
 err=[]

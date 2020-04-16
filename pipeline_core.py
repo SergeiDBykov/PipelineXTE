@@ -1342,50 +1342,50 @@ class ObservationXTE():
             #FOR PAPER
 
             matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
-            matplotlib.rcParams['figure.subplot.left']=0.1
+            matplotlib.rcParams['figure.subplot.left']=0.15
             matplotlib.rcParams['figure.subplot.bottom']=0.15
-            matplotlib.rcParams['figure.subplot.right']=0.9
-            matplotlib.rcParams['figure.subplot.top']=0.85
-            plt.subplots_adjust(wspace=0.7)
-            plt.subplots_adjust(hspace=0.3)
+            matplotlib.rcParams['figure.subplot.right']=0.85
+            matplotlib.rcParams['figure.subplot.top']=0.9
+            plt.subplots_adjust(wspace=2)
+            plt.subplots_adjust(hspace=1)
 
             fig = plt.figure()
-            rows=8
+            rows=7
             cols=3
             #(rows,cols), (y,x) <- those are coordinates of an axis in subplots
             ax_eqw = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
             ax_efold=ax_eqw.twinx()
-            ax_fe_flux = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
-            ax_efold_2=ax_fe_flux.twinx()
 
-            ax_fe_norm = plt.subplot2grid((rows,cols), (4, 0), rowspan=2, colspan=3)
+            #ax_fe_flux = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
+            #ax_efold_2=ax_fe_flux.twinx()
+
+            ax_fe_norm = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
             ax_efold_3=ax_fe_norm.twinx()
-
-            ax_ccf= plt.subplot2grid((rows,cols), (6, 0), rowspan=2, colspan=3)
+            ax_ccf= plt.subplot2grid((rows,cols), (5, 0), rowspan=2, colspan=3)
 
             ax_efold.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
-            ax_eqw.errorbar(phase,eqw,eqw_err,color='r',drawstyle='steps-mid',alpha=0.6)
+            ax_eqw.errorbar(phase,eqw,eqw_err,color='c',drawstyle='steps-mid',alpha=0.6)
 
-            ax_eqw.set_ylabel('Fe Ka Eq. width, eV',color='r')
-            ax_efold.set_ylabel('Flux 7-12, 1e-8 cgs')
-            ax_eqw.set_xlabel('Phase')
+            ax_eqw.set_ylabel('Iron line \n Eq. width, eV',color='c',fontsize=8)
+            ax_efold.set_ylabel('Flux (7-12 keV) \n $10^{-8}$ cgs',fontsize=6)
+            ax_eqw.set_xlabel('Phase',fontsize=8)
             ax_eqw.set_title(self.ObsID+f' ({datamode})')
 
 
 
-            ax_efold_2.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
-            ax_fe_flux.errorbar(phase,flux_gauss,flux_gauss_err,color='g',drawstyle='steps-mid',alpha=0.6)
+            #ax_efold_2.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
+            #ax_fe_flux.errorbar(phase,flux_gauss,flux_gauss_err,color='g',drawstyle='steps-mid',alpha=0.6)
 
-            ax_fe_flux.set_ylabel('Fe Ka flux ',color='g')
+            #ax_fe_flux.set_ylabel('Fe Ka flux ',color='g')
             #ax_efold_2.set_ylabel('Flux 7-12, 1e-8 cgs')
-            ax_fe_flux.set_xlabel('Phase')
+            #ax_fe_flux.set_xlabel('Phase')
 
 
             ax_efold_3.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
-            ax_fe_norm.errorbar(phase,norm_line,norm_line_err,color='c',drawstyle='steps-mid',alpha=0.6)
-            ax_fe_norm.set_ylabel('Fe Ka Norm. ',color='c')
-            #ax_efold_2.set_ylabel('Flux 7-12, 1e-8 cgs')
-            ax_fe_flux.set_xlabel('Phase')
+            ax_fe_norm.errorbar(phase,norm_line,norm_line_err,color='r',drawstyle='steps-mid',alpha=0.6)
+            ax_fe_norm.set_ylabel('Iron line \n Norm. ',color='r',fontsize=8)
+            ax_efold_3.set_ylabel('Flux (7-12 keV) \n $10^{-8}$ cgs',fontsize=6)
+            ax_fe_norm.set_xlabel('Phase',fontsize=8)
 
 
             CCF=cross_correlation.CrossCorrelation(phase*period,eqw,flux712,circular=True)
@@ -1393,19 +1393,19 @@ class ObservationXTE():
             lag,ccf=CCF.calc_ccf()
             peaks,_,_=CCF.find_max()
             delay=min(peaks[peaks>0])
-            ax_ccf.axvline(delay,ls=':',color='g',alpha=0.5)
+            #ax_ccf.axvline(delay,ls=':',color='g',alpha=0.5)
 
             ax_ccf.plot(lag,ccf,color='b',alpha=0.6)
             #ax_ccf.set_title(f'Flux lags <--- 0 ---> Eqw lags',fontsize=8)
             ax_ccf.set_xlim(0,2*period)
             #ax_ccf.set_xlabel('Eqw Delay, sec')
-            ax_ccf.set_xlabel('Eqw Delay, sec')
-            ax_ccf.set_ylabel('Pearson r')
+            ax_ccf.set_xlabel('Eqw Delay, sec',fontsize=8)
+            ax_ccf.set_ylabel('Pearson r',fontsize=8)
 
             fig.tight_layout()
             sns.despine(fig,top=1,right=0)
             #sns.set(font_scale=0.5)
-            fig.savefig(f'Day{mjd}_ph_res_{ObsID}_{model}_report.png',dpi=500)
+            fig.savefig(f'Day{mjd}_ph_res_{ObsID}_{model}_report.pdf',dpi=500)
 
             eqw_pf=pulsed_fraction_error(eqw,np.max(eqw_err,axis=0))
             flux_gauss_pf=pulsed_fraction_error(flux_gauss,np.max(flux_gauss_err,axis=0))
@@ -1423,5 +1423,93 @@ class ObservationXTE():
             plt.close('all')
 
 
+            #FOR database
 
+            results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
+
+            filename='standard_pipeline'
+            ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
+
+            matplotlib.rcParams['figure.figsize'] = 9, 6.6/2
+            matplotlib.rcParams['figure.subplot.left']=0.1
+            matplotlib.rcParams['figure.subplot.bottom']=0.15
+            matplotlib.rcParams['figure.subplot.right']=0.95
+            matplotlib.rcParams['figure.subplot.top']=0.9
+            plt.subplots_adjust(wspace=2)
+            plt.subplots_adjust(hspace=1)
+
+            fig = plt.figure()
+            rows=7
+            cols=7
+            #(rows,cols), (y,x) <- those are coordinates of an axis in subplots
+            ax_eqw = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+            ax_efold=ax_eqw.twinx()
+
+            #ax_fe_flux = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
+            #ax_efold_2=ax_fe_flux.twinx()
+
+            ax_fe_norm = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
+            ax_efold_3=ax_fe_norm.twinx()
+            ax_ccf= plt.subplot2grid((rows,cols), (5, 0), rowspan=2, colspan=3)
+
+            ax_efold.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
+            ax_eqw.errorbar(phase,eqw,eqw_err,color='c',drawstyle='steps-mid',alpha=0.6)
+
+            ax_eqw.set_ylabel('Iron line \n Eq. width, eV',color='c',fontsize=8)
+            ax_efold.set_ylabel('Flux (7-12 keV) \n $10^{-8}$ cgs',fontsize=6)
+            ax_eqw.set_xlabel('Phase',fontsize=8)
+            ax_eqw.set_title(self.ObsID+f' ({datamode})')
+
+
+
+            #ax_efold_2.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
+            #ax_fe_flux.errorbar(phase,flux_gauss,flux_gauss_err,color='g',drawstyle='steps-mid',alpha=0.6)
+
+            #ax_fe_flux.set_ylabel('Fe Ka flux ',color='g')
+            #ax_efold_2.set_ylabel('Flux 7-12, 1e-8 cgs')
+            #ax_fe_flux.set_xlabel('Phase')
+
+
+            ax_efold_3.errorbar(phase,flux712,flux712_err,color='k',label='Flux 7-12',drawstyle='steps-mid',ls=':',alpha=0.6)
+            ax_fe_norm.errorbar(phase,norm_line,norm_line_err,color='r',drawstyle='steps-mid',alpha=0.6)
+            ax_fe_norm.set_ylabel('Iron line \n Norm. ',color='r',fontsize=8)
+            ax_efold_3.set_ylabel('Flux (7-12 keV) \n $10^{-8}$ cgs',fontsize=6)
+            ax_fe_norm.set_xlabel('Phase',fontsize=8)
+
+
+            CCF=cross_correlation.CrossCorrelation(phase*period,eqw,flux712,circular=True)
+            #CCF=cross_correlation.CrossCorrelation(phase*period,norm_line,flux712,circular=True)
+            lag,ccf=CCF.calc_ccf()
+            peaks,_,_=CCF.find_max()
+            delay=min(peaks[peaks>0])
+            #ax_ccf.axvline(delay,ls=':',color='g',alpha=0.5)
+
+            ax_ccf.plot(lag,ccf,color='b',alpha=0.6)
+            #ax_ccf.set_title(f'Flux lags <--- 0 ---> Eqw lags',fontsize=8)
+            ax_ccf.set_xlim(0,2*period)
+            #ax_ccf.set_xlabel('Eqw Delay, sec')
+            ax_ccf.set_xlabel('Eqw Delay, sec',fontsize=8)
+            ax_ccf.set_ylabel('Pearson r',fontsize=8)
+
+
+
+
+            ax_flux= plt.subplot2grid((rows,cols), (0, 4), rowspan=7, colspan=4)
+            time=ObsParams.MJD_START
+            flux=ObsParams.cutoffpl_tot_flux/1e-8
+
+            ax_flux.plot(time,flux,color='b',marker='s',lw=0,ms=4,alpha=0.8)
+            ax_flux.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='b',fontsize=8)
+            ax_flux.set_xlabel('Time, MJD')
+            ax_flux.axvline(mjd_obs,color='r',ls='-.')
+
+
+            fig.tight_layout()
+            sns.despine(fig,top=1,right=0)
+            #sns.set(font_scale=0.5)
+            fig.savefig(f'Day{mjd}_ph_res_{ObsID}_{model}_evol.png',dpi=500)
+
+
+            plt.close(fig)
+            plt.close('all')
 
