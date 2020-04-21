@@ -1477,7 +1477,7 @@ class ObservationXTE():
             ax_fe_norm.set_xlabel('Phase',fontsize=8)
 
 
-            CCF=cross_correlation.CrossCorrelation(phase*period,eqw,flux712,circular=True)
+            CCF=cross_correlation.CrossCorrelation(phase*period,eqw,flux712,circular=1)
             #CCF=cross_correlation.CrossCorrelation(phase*period,norm_line,flux712,circular=True)
             lag,ccf=CCF.calc_ccf()
             peaks,_,_=CCF.find_max()
@@ -1491,7 +1491,22 @@ class ObservationXTE():
             ax_ccf.set_xlabel('Eqw Delay, sec',fontsize=8)
             ax_ccf.set_ylabel('Pearson r',fontsize=8)
 
+            eqw_err=np.vstack((eqw_low, eqw_hi)).max(axis=0)
+            flux712_err=np.vstack((flux712_low, flux712_hi)).max(axis=0)
 
+
+            mc_ccf=CCF.mc_errors(y1_err=eqw_err,y2_err=flux712_err,N_trials=1000,
+                  divide_by_mean=1, subtract_mean=1)
+            ax_lag_distr=ax_ccf.twinx()
+            ax_lag_distr.hist(mc_ccf[3],color='m',alpha=0.6,lw=0.8,histtype='step',bins=25)
+            ax_lag_distr.set_ylabel('peak distribution', color='m')
+            quant=np.quantile(mc_ccf[3],q=[0.16,0.84])
+            print(quant)
+            ax_lag_distr.axvline(quant[0],color='r',alpha=0.5)
+            ax_lag_distr.axvline(quant[1],color='r',alpha=0.5)
+
+            self.write_to_obs_info(self.fasebin_info_file,'delay_lo',quant[0])
+            self.write_to_obs_info(self.fasebin_info_file,'delay_hi',quant[1])
 
 
             ax_flux= plt.subplot2grid((rows,cols), (0, 4), rowspan=7, colspan=4)

@@ -126,6 +126,72 @@ ax.plot(time,gauss(time,*popt),'k:',label='')
 plt.show()
 
 
+#%%plot  period stuff with approximation
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START[~ObsParams.period_orb_corr.isna()]
+ax.set_xlabel('Time, MJD')
+
+
+ax_period=ax
+
+period=ObsParams.period_orb_corr[~ObsParams.period_orb_corr.isna()]
+period_err=ObsParams.period_orb_corr_err[~ObsParams.period_orb_corr.isna()]
+
+factor=doppler.kepler_solution(time*day2sec, doppler.orb_params_v0332)[3]
+
+period_bary=factor*period
+
+
+ax_period.errorbar(time,period,period_err,color='g',marker='s',ls='',ms=4,alpha=0.8)
+ax_period.plot(time,period_bary,color='m',marker='.',ls='',ms=2,alpha=0.6)
+
+ax_period.set_ylabel('Period, s',color='g')
+ax_period.set_ylim(4.373,4.377)
+
+ax.axvspan(53340.29,53360.00,alpha=0.2, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.2, color='gray')
+
+from scipy.optimize import curve_fit
+
+
+t0=53340
+def line(t,p0,pdot):
+    return p0+(t-t0)*pdot
+
+popt,pcov=curve_fit(line,time,period,p0=[4.373,4e-6])
+
+ax.plot(time,line(time,*popt),'k:',label='')
+print(f'All outburst: P(t)=P0+Pdot*(t-53340), P0={popt[0]} Pdot={popt[1]}+-{np.sqrt(np.diag(pcov)[1])}')
+
+
+popt,pcov=curve_fit(line,time[(53340<time) & (time<53360)],period[(53340<time) & (time<53360)],p0=[4.373,4e-6],
+                    sigma=period_err[(53340<time) & (time<53360)],absolute_sigma=1)
+ax.plot(time[(53340<time) & (time<53360)],line(time[(53340<time) & (time<53360)],*popt),'r:',label='')
+print(f'Rising of the outburst: P(t)=P0+Pdot*(t-53340), P0={popt[0]} Pdot={popt[1]}+-{np.sqrt(np.diag(pcov)[1])}')
+
+
+
+popt,pcov=curve_fit(line,time[(53384.36<time) & (time<53428.51)],period[(53384.36<time) & (time<53428.51)],p0=[4.373,4e-6],
+                    sigma=period_err[(53384.36<time) & (time<53428.51)],absolute_sigma=1)
+ax.plot(time[(53384.36<time) & (time<53428.51)],line(time[(53384.36<time) & (time<53428.51)],*popt),'m:',label='')
+print(f'Decay part of the outburst: P(t)=P0+Pdot*(t-53340), P0={popt[0]} Pdot={popt[1]}+-{np.sqrt(np.diag(pcov)[1])}')
+
+
+popt,pcov=curve_fit(line,time[(53384.36<time) & (time<53400)],period[(53384.36<time) & (time<53400)],p0=[4.373,4e-6],
+                    sigma=period_err[(53384.36<time) & (time<53400)],absolute_sigma=1)
+ax.plot(time[(53384.36<time) & (time<53400)],line(time[(53384.36<time) & (time<53400)],*popt),'r:',label='')
+
+print(f'Decay part of the outburst before 53400: P(t)=P0+Pdot*(t-53340), P0={popt[0]} Pdot={popt[1]}+-{np.sqrt(np.diag(pcov)[1])}')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'period_evol.png',dpi=500)
+
+plt.show()
+
 
 #%%plot flux continuum and iron
 
@@ -435,7 +501,7 @@ ax.set_xlabel('Time, MJD')
 # ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 orbtime=np.linspace(53335,53420,200)
-r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+r,_,_,_,z=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
 
 ax2=ax.twinx()
@@ -449,6 +515,45 @@ ax2.set_ylabel('Distance to the companion, \n lt-sec.')
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'delay.pdf',dpi=500)
+plt.show()
+
+
+
+#%% plot delay stuff from my monte carlo estimation
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+df=ObsParams[~ObsParams.ObsID.isin(ignored_obs)]
+df=df[~np.isnan(df.delay_lo)]
+
+
+time=df.MJD_START
+
+ax.fill_between(time,df.delay_lo,df.delay_hi,color='c',alpha=0.6)
+
+ax.set_ylabel('Iron line equivalent width delay, sec',color='k')
+ax.set_xlabel('Time, MJD')
+
+
+# ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+# ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+# ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+orbtime=np.linspace(53335,53420,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.')
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'mc_delay_err.png',dpi=500)
 plt.show()
 
 
