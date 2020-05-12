@@ -3,7 +3,7 @@
 """
 Created on Sat Feb 22 18:41:27 2020
 
-@author: s.bykov
+@author: s.bykovс
 """
 
 
