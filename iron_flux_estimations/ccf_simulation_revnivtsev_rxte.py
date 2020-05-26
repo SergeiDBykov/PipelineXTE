@@ -17,11 +17,11 @@ from stingray import Lightcurve, Crossspectrum, Powerspectrum
 from stingray.simulator import simulator
 from Misc.TimeSeries import cross_correlation
 
-os.chdir('/Users/s.bykov/work/xray_pulsars/rxte/results/out90089-11-03-01G/products/lc_sa')
+#os.chdir('/Users/s.bykov/work/xray_pulsars/rxte/results/out90089-11-03-01G/products/lc_sa')
 
 
 
-def simulate_lc712_from_powerspectrum(N=10000,mean=3500,rms=0.16,dt=0.1,
+def simulate_lc712_from_powerspectrum(N=10000,mean=3500,rms=0.16,dt=2,
                                    plot_results=0):
 
     sim = simulator.Simulator(N=N, mean=mean ,rms=rms, dt=dt)
@@ -202,9 +202,9 @@ plt.show()
 
 #%% save data (trash)
 
-tmp=np.vstack((lc67.time,lc67.counts)).T
-np.savetxt(f'simulations/lc67_simul_dt{deltaT}s_A{A}.txt',tmp,delimiter=' ')
+# tmp=np.vstack((lc67.time,lc67.counts)).T
+# np.savetxt(f'simulations/lc67_simul_dt{deltaT}s_A{A}.txt',tmp,delimiter=' ')
 
-tmp=np.vstack((lc712.time,lc712.counts)).T
-np.savetxt(f'simulations/lc712_simul_dt{deltaT}s_A{A}.txt',tmp,delimiter=' ')
+# tmp=np.vstack((lc712.time,lc712.counts)).T
+# np.savetxt(f'simulations/lc712_simul_dt{deltaT}s_A{A}.txt',tmp,delimiter=' ')
 

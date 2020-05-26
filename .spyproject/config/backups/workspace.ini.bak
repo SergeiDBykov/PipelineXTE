@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['period_error_monte_carlo.py', 'pipeline_core.py', 'iron_line_rate_estimation_2sec_fasebin.py']
+recent_files = ['iron_flux_estimations/pipeline_sa_lcurves_in_bands_top_plot_en_spe_each_time.py', 'iron_flux_estimations/pipeline_sa_lcurves_in_bands_decay_plot_en_spe_each_time.py', 'iron_flux_estimations/ccf_simulation_revnivtsev_rxte_2s_decay.py']
 

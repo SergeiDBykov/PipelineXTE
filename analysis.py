@@ -517,6 +517,41 @@ sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'delay.pdf',dpi=500)
 plt.show()
 
+#%% plot normalization delay stuff vs time vs distance
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+df=ObsParams[~ObsParams.ObsID.isin(ignored_obs)]
+
+deltat,deltat_err=df.norm_deltat,df.norm_deltat_err
+time=df.MJD_START
+
+ax.errorbar(time,deltat,deltat_err,fmt='.',color='r',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line normalization width delay, sec',color='k')
+ax.set_xlabel('Time, MJD')
+
+
+# ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+# ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+# ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+orbtime=np.linspace(53335,53420,200)
+r,_,_,_,z=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.')
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'norm_delay.pdf',dpi=500)
+plt.show()
 
 
 #%% plot delay stuff from my monte carlo estimation
