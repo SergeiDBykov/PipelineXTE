@@ -124,8 +124,6 @@ msg_spe_fit=msg
 
 #%% pd dataframe
 
-do_not_start_this_chunk
-
 err=[]
 msg=[]
 if input('start  calculation from the beginning?')=='y':

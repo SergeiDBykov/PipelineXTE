@@ -9,76 +9,9 @@ Created on Thu May 14 15:06:23 2020
 
 from pipeline_core import *
 
-ObsID='90427-01-03-02' #  90427-01-03-00 90427-01-03-02
-xte_obs=ObservationXTE(ObsID)
-os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
 
 
-binsize=1
-
-'''
-
-Channel 9:
-    energy = 5.4322805+-0.20317984
-    eff. area = 4091.5338513619663  cm^2
-    energy width = 0.40635968
-    1/(eff_area*en width) = 0.0006014551413650553
-
-
-Channel 10:
-    energy = 5.838932+-0.2034719
-    eff. area = 2645.4159092628215  cm^2
-    energy width = 0.4069438
-    1/(eff_area*en width) = 0.0009289056464977036
-
-
-
-Channel 11:
-    energy = 6.246167+-0.20376277
-    eff. area = 2816.1715476717145  cm^2
-    energy width = 0.40752554
-    1/(eff_area*en width) = 0.0008713368112906551
-
-
-Channel 12:
-        energy = 6.653981+-0.20405173
-    eff. area = 4309.658590127702  cm^2
-    energy width = 0.40810346
-    1/(eff_area*en width) = 0.0005685738168610067
-
-Channel 13:
-        energy = 7.062372+-0.20433903
-    eff. area = 4424.693113729067  cm^2
-    energy width = 0.40867806
-    1/(eff_area*en width) = 0.0005530132315100311
-
-
-Channel 14:
-        energy = 7.4713354+-0.20462418
-    eff. area = 4477.967104653102  cm^2
-    energy width = 0.40924836
-    1/(eff_area*en width) = 0.0005456726080212225
-
-
-Channel 15:
-        energy = 7.8808675+-0.2049079
-    eff. area = 4505.861407994961  cm^2
-    energy width = 0.4098158
-    1/(eff_area*en width) = 0.0005415436557273444
-
-
-Channel 16:
-        energy = 8.290965+-0.2051897
-    eff. area = 4548.214051969805  cm^2
-    energy width = 0.4103794
-    1/(eff_area*en width) = 0.000535764029380296
-
-'''
-
-
-
-path_to_lc=f'/Users/s.bykov/work/xray_pulsars/rxte/results/out90427-01-03-02/products/sa_data_lc_{binsize}sec'
-os.chdir(f'products/sa_data_lc_{binsize}sec')
+path_to_lc=f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/sa_data_lc_{binsize}sec'
 
 class TimeSeries():
 
@@ -98,8 +31,8 @@ en=np.array([5.4322805,
              5.838932,
              6.246167,
              6.653981,
-             7.4713354,
-             7.8808675
+             7.062372,
+             7.4713354
 ])
 
 
@@ -109,19 +42,19 @@ factor=np.array([0.0006014551413650553,
                  0.0009289056464977036,
                  0.0008713368112906551,
                  0.0005685738168610067,
-                 0.0005456726080212225,
-                 0.0005415436557273444
+                 0.0005530132315100311,
+                 0.0005456726080212225
 ])
 
 lc9=TimeSeries('ch9')
 lc10=TimeSeries('ch10')
 lc11=TimeSeries('ch11')
 lc12=TimeSeries('ch12')
-#lc13=TimeSeries('ch13')
+lc13=TimeSeries('ch13')
 lc14=TimeSeries('ch14')
-lc15=TimeSeries('ch15')
+#lc15=TimeSeries('ch15')
 
-lclist=[lc9,lc10,lc11,lc12,lc14,lc15]
+lclist=[lc9,lc10,lc11,lc12,lc13,lc14]
 
 for k,lc in enumerate(lclist):
     lc=lc.divide(1/factor[k])
@@ -133,7 +66,7 @@ rate_error=np.array([lc.rate.std() for lc in lclist])
 
 plt.figure()
 
-spe=np.genfromtxt('/Users/s.bykov/work/xray_pulsars/rxte/results/out90427-01-03-02/products/fasebin_spe/conversion_factors/data_area_en.qdp',skip_header=3)
+spe=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin_spe/conversion_factors/data_area_en.qdp',skip_header=3)
 
 
 
@@ -173,6 +106,7 @@ for k,i in enumerate(randi):
 
     N_opt,N_opt_err=curve_fit(best_line,en[[0,1,4,5]],rate[[0,1,4,5]],
                               p0=b,sigma=rate_error[[0,1,4,5]],absolute_sigma=True)
+
     myline=lambda x: a*x+N_opt
     ax[k].plot(enaxis,myline(enaxis),'k:',alpha=0.3)
 
@@ -214,6 +148,7 @@ def find_fe_flux(lclist,frac=1):
 
         N_opt,N_opt_err=curve_fit(best_line,en[[0,1,4,5]],rate[[0,1,4,5]],
                                   p0=b,sigma=rate_error[[0,1,4,5]],absolute_sigma=True)
+        Norm_err=np.sqrt(np.diag(N_opt_err))[0]
 
         myline=lambda x: a*x+N_opt
 
@@ -223,8 +158,7 @@ def find_fe_flux(lclist,frac=1):
         iron_band_flux_err=np.sqrt(rate_error[2]**2+rate_error[3]**2)
 
         fe_flux=iron_band_flux-myline(iron_band_en)*frac
-        fe_flux_err=iron_band_flux_err
-        #fe_flux_err=np.sqrt(ferr[1]**2)
+        fe_flux_err=np.sqrt(iron_band_flux_err**2+frac**2*Norm_err**2)
 
         diff.append(fe_flux)
         diff_err.append(fe_flux_err)
@@ -235,12 +169,10 @@ def find_fe_flux(lclist,frac=1):
     diff_err=np.reshape(diff_err,N)
     return diff,diff_err
 
-frac=1
+
+frac=0.9
 fe_flux,fe_flux_err=find_fe_flux(lclist,frac=frac)
 
-
-
-#%% plot iron intensity
 figure()
 plt.errorbar(lclist[0].time,fe_flux,fe_flux_err)
 plt.xlabel('Time, s')
@@ -252,6 +184,15 @@ plt.hist(fe_flux,bins=100,label='Fe_flux')
 plt.xlabel('Iron line flux ')
 plt.show()
 
+
+
+print(f'{frac*100}% OF THE LINEAR APPROX IS USED AS CONTINUUM')
+print(f'Mean Flux: {np.mean(fe_flux)}')
+print(f'Std Flux: {np.std(fe_flux)}')
+print(f' mean/ std : {np.mean(fe_flux)/np.std(fe_flux)}')
+print(f'Mean significance (mean flux/err): {np.mean(fe_flux/fe_flux_err)}')
+
+print(f'expected iron flux: {0.07*lc11.rate.mean()}')
 def weighted_avg_and_std(values, weights):
     """
     Return the weighted average and standard deviation.
@@ -262,25 +203,16 @@ def weighted_avg_and_std(values, weights):
     # Fast and numerically precise:
     variance = np.average((values-average)**2, weights=weights)
     return (average, np.sqrt(variance))
-
-
-
-print(f'{frac*100}% OF THE LINEAR APPROX IS USED AS CONTINUUM')
-print(f'Mean Flux: {np.mean(fe_flux)}')
-print(f'Std Flux: {np.std(fe_flux)}')
 wmean,wstd=weighted_avg_and_std(fe_flux, fe_flux_err**(-2))
 print(f'Weighted mean flux: {wmean}')
 print(f'Weighted std flux: {wstd}')
 print(f'Weighted mean/weighted std : {wmean/wstd}')
 
-print(f'Mean Error: {np.mean(fe_flux_err)}')
-print(f'Mean significance (mean flux/err): {np.mean(fe_flux/fe_flux_err)}')
 
+#%% save data
 
-
-#%% save file
 create_dir('fe_line')
-os.system(f'cp ch13.lc_bary_orb_corr fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr')
+os.system(f'cp ch11.lc_bary_orb_corr fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr')
 with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mode='update') as hdul:
     hdul[1].data['rate']=fe_flux
     hdul[1].data['error']=fe_flux_err
@@ -288,40 +220,96 @@ with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mod
 
 
 
-'''
-XSPEC12>flux 6 7
- Model Flux    0.2104 photons (2.1877e-09 ergs/cm^2/s) range (6.0000 - 7.0000 keV)
- 3    1   cflux      lg10Flux   cgs      -9.80041     +/-  3.05832E-02
+
+#%% plot ccfs
 
 
-'''
+matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
+matplotlib.rcParams['figure.subplot.left']=0.15
+matplotlib.rcParams['figure.subplot.bottom']=0.15
+matplotlib.rcParams['figure.subplot.right']=0.85
+matplotlib.rcParams['figure.subplot.top']=0.9
+plt.subplots_adjust(wspace=2)
+plt.subplots_adjust(hspace=1)
 
 
-#%% mean of three lc
+fig,ax_ccf=plt.subplots()
 
-#rate_iron_band=(lc11.rate+lc12.rate+lc13.rate)/3
-rate_iron_band=(lc11.rate+lc12.rate)/2
 
-frac=0.6
+def plot_ccf(filepath,ax):
+    ccf=np.genfromtxt(filepath,skip_header=3)
+    N=int(ccf[:,0].shape[0]/2)
+    #norm=np.max(ccf[:,2])
+    norm=1
+    ax.errorbar(ccf[:,0],ccf[:,2]/norm,ccf[:,3]/norm,drawstyle='steps-mid',label='data')
+    #ax.errorbar(-ccf[N:,0],ccf[N:,2],ccf[N:,3],alpha=0.5,color='r',drawstyle='steps-mid')
+    ax.errorbar(ccf[N:,0],ccf[0:N+1:,2][::-1]/norm,ccf[0:N+1:,3][::-1]/norm,alpha=0.5,color='r',drawstyle='steps-mid',label='data (neg delay)')
+    ax.set_xlabel('Delay, s')
 
-delta_rate=lc14.rate-frac*rate_iron_band
+    ax.set_ylabel('CCF')
+    fig.tight_layout()
+    sns.despine(fig,top=1,right=0)
+    plt.show()
 
-print(f'''
-     mean: {np.mean(delta_rate)}
-     std: {np.std(delta_rate)}
-     signif: {np.mean(delta_rate)/np.std(delta_rate)}
-      ''')
 
-plt.figure()
-plt.errorbar(lc11.time,delta_rate,lc14.error)
+Obs,fr=ObsID,frac
+
+plot_ccf(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{Obs}/products/sa_data_lc_{binsize}sec/ccf_{fr}.qdp',ax_ccf)
+
+ax_ccf.set_xlabel('Delay, s')
+#ax_ccf.legend()
+ax_ccf.set_title(f'{Obs}')
+
+
+fig.tight_layout()
+sns.despine(fig,top=0,right=0)
+plt.show()
+#plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ccf_{fr}_{Obs}.pdf')
+plt.savefig(f'ccf_{fr}_{Obs}.pdf')
+
+
 plt.show()
 
 
 
-os.chdir(path_to_lc)
-os.system(f'cp ch11.lc_bary_orb_corr fe_line/python_fe_line_{frac}_no13.lc_bary_orb_corr')
-with fits.open(f'fe_line/python_fe_line_{frac}_no13.lc_bary_orb_corr', mode='update') as hdul:
-    hdul[1].data['rate']=delta_rate
-    hdul[1].data['error']=lc14.error
-    hdul.flush()  # changes are written back to original.fits
+
+
+
+# #%% old
+# '''
+# XSPEC12>flux 6 7
+#  Model Flux    0.2104 photons (2.1877e-09 ergs/cm^2/s) range (6.0000 - 7.0000 keV)
+#  3    1   cflux      lg10Flux   cgs      -9.80041     +/-  3.05832E-02
+
+
+# '''
+
+
+# #%% mean of three lc
+
+# #rate_iron_band=(lc11.rate+lc12.rate+lc13.rate)/3
+# rate_iron_band=(lc11.rate+lc12.rate)/2
+
+# frac=0.6
+
+# delta_rate=lc14.rate-frac*rate_iron_band
+
+# print(f'''
+#      mean: {np.mean(delta_rate)}
+#      std: {np.std(delta_rate)}
+#      signif: {np.mean(delta_rate)/np.std(delta_rate)}
+#       ''')
+
+# plt.figure()
+# plt.errorbar(lc11.time,delta_rate,lc14.error)
+# plt.show()
+
+
+
+# os.chdir(path_to_lc)
+# os.system(f'cp ch11.lc_bary_orb_corr fe_line/python_fe_line_{frac}_no13.lc_bary_orb_corr')
+# with fits.open(f'fe_line/python_fe_line_{frac}_no13.lc_bary_orb_corr', mode='update') as hdul:
+#     hdul[1].data['rate']=delta_rate
+#     hdul[1].data['error']=lc14.error
+#     hdul.flush()  # changes are written back to original.fits
 

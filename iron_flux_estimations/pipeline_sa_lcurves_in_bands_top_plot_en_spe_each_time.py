@@ -9,12 +9,6 @@ Created on Thu May 14 15:06:23 2020
 
 from pipeline_core import *
 
-ObsID='90089-11-03-02' # 90089-11-03-00G or 90089-11-03-01G 90089-11-03-02
-xte_obs=ObservationXTE(ObsID)
-os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
-
-
-binsize=5
 
 '''
 
@@ -56,7 +50,6 @@ Channel 13:
 
 
 path_to_lc=f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/sa_data_lc_{binsize}sec'
-os.chdir(f'products/sa_data_lc_{binsize}sec')
 
 class TimeSeries():
 
@@ -191,7 +184,7 @@ def find_fe_flux(lclist,frac=1):
         iron_band_flux_err=np.sqrt(rate_error[1]**2+rate_error[2]**2)
 
         fe_flux=iron_band_flux-myline(iron_band_en)*frac
-        fe_flux_err=np.sqrt(iron_band_flux_err**2+Norm_err**2)
+        fe_flux_err=np.sqrt(iron_band_flux_err**2+frac**2*Norm_err**2)
 
         diff.append(fe_flux)
         diff_err.append(fe_flux_err)
@@ -241,6 +234,8 @@ print(f'Weighted std flux: {wstd}')
 print(f'Weighted mean/weighted std : {wmean/wstd}')
 
 
+#%% save data
+
 create_dir('fe_line')
 os.system(f'cp ch11.lc_bary_orb_corr fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr')
 with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mode='update') as hdul:
@@ -249,3 +244,57 @@ with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mod
     hdul.flush()  # changes are written back to original.fits
 
 
+
+
+
+#%% plot ccfs
+
+
+matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
+matplotlib.rcParams['figure.subplot.left']=0.15
+matplotlib.rcParams['figure.subplot.bottom']=0.15
+matplotlib.rcParams['figure.subplot.right']=0.85
+matplotlib.rcParams['figure.subplot.top']=0.9
+plt.subplots_adjust(wspace=2)
+plt.subplots_adjust(hspace=1)
+
+
+fig,ax_ccf=plt.subplots()
+
+
+def plot_ccf(filepath,ax):
+    ccf=np.genfromtxt(filepath,skip_header=3)
+    N=int(ccf[:,0].shape[0]/2)
+    #norm=np.max(ccf[:,2])
+    norm=1
+    ax.errorbar(ccf[:,0],ccf[:,2]/norm,ccf[:,3]/norm,drawstyle='steps-mid',label='data')
+    #ax.errorbar(-ccf[N:,0],ccf[N:,2],ccf[N:,3],alpha=0.5,color='r',drawstyle='steps-mid')
+    ax.errorbar(ccf[N:,0],ccf[0:N+1:,2][::-1]/norm,ccf[0:N+1:,3][::-1]/norm,alpha=0.5,color='r',drawstyle='steps-mid',label='data (neg delay)')
+    ax.set_xlabel('Delay, s')
+
+    ax.set_ylabel('CCF')
+    fig.tight_layout()
+    sns.despine(fig,top=1,right=0)
+    plt.show()
+
+
+Obs,fr=ObsID,frac
+
+plot_ccf(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{Obs}/products/sa_data_lc_{binsize}sec/ccf_{fr}.qdp',ax_ccf)
+
+ax_ccf.set_xlabel('Delay, s')
+#ax_ccf.legend()
+ax_ccf.set_title(f'{Obs}')
+
+
+fig.tight_layout()
+sns.despine(fig,top=0,right=0)
+plt.show()
+plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ccf_{frac}_{Obs}.pdf')
+plt.savefig(f'ccf_{frac}_{Obs}.pdf')
+
+
+plt.show()
+
+
+#%% add simulations from the power spectrum

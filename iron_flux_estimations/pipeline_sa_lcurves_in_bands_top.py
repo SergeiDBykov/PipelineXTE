@@ -9,7 +9,7 @@ Created on Thu May 14 15:06:23 2020
 
 from pipeline_core import *
 
-ObsID='90089-11-03-02' # 90089-11-03-00G or 90089-11-03-01G 90089-11-03-02
+ObsID='90089-11-03-00G' # 90089-11-03-00G or 90089-11-03-01G 90089-11-03-02
 xte_obs=ObservationXTE(ObsID)
 os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
 
@@ -178,32 +178,3 @@ for channel in glob('*lc_bary'):
 
 
 
-
-# #%% plot ccfs
-# fig,ax_ccf=plt.subplots(figsize=(16,6))
-
-
-# def plot_ccf(filepath,ax):
-#     ccf=np.genfromtxt(filepath,skip_header=3)
-#     N=int(ccf[:,0].shape[0]/2)
-#     norm=np.max(ccf[:,2])
-#     ax.errorbar(ccf[:,0],ccf[:,2]/norm,ccf[:,3]/norm,drawstyle='steps-mid',label='data')
-#     #ax.errorbar(-ccf[N:,0],ccf[N:,2],ccf[N:,3],alpha=0.5,color='r',drawstyle='steps-mid')
-#     ax.errorbar(ccf[N:,0],ccf[0:N+1:,2][::-1]/norm,ccf[0:N+1:,3][::-1]/norm,alpha=0.5,color='m',drawstyle='steps-mid',label='data (neg delay)')
-#     ax.set_xlabel('Delay, s')
-
-#     ax.set_ylabel('CCF')
-#     fig.tight_layout()
-#     sns.despine(fig,top=1,right=0)
-#     plt.show()
-
-# plot_ccf(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/sa_data_lc_{binsize}sec/ccf_{fraction}.qdp',ax_ccf)
-
-# ax_ccf.set_xlabel('iron delay, s')
-# ax_ccf.legend()
-# ax_ccf.set_title(f'\n\n ccf_{fraction}')
-
-# ax_ccf.set_xlim(-5,15)
-# ax_ccf.set_ylim(-0.5,1)
-
-# plt.show()
