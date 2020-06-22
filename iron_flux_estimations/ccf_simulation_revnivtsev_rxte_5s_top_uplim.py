@@ -91,7 +91,7 @@ def find_ccf(lc712,lc67,plot=0,deltaT=0,A=0):
 
 #%%
 
-simulate_lc712_from_powerspectrum(plot_results=1)
+#simulate_lc712_from_powerspectrum(plot_results=1)
 
 #%% simulate
 ccfs=[]
@@ -99,8 +99,8 @@ from scipy.ndimage import gaussian_filter1d
 for i in range(100):
     print(i)
     lc712=simulate_lc712_from_powerspectrum()
-    A=0.8
-    deltaT=30
+    A=0.9
+    deltaT=20
     lc67=iron_band_model_lc(lc712, A, deltaT)
     #lc67.counts=gaussian_filter1d(lc67.counts,sigma=0.1)
     ccf=find_ccf(lc712, lc67,deltaT=deltaT,A=A,plot=0)
@@ -128,6 +128,7 @@ matplotlib.rcParams['figure.subplot.top']=0.9
 plt.subplots_adjust(wspace=2)
 plt.subplots_adjust(hspace=1)
 
+plt.figure()
 fig,ax_ccf=plt.subplots()
 
 ax_ccf.errorbar(ccf.lag,ccfs.mean(axis=0)*0.4,ccfs.std(axis=0)*0.4,color='k',label=f'simulations dT={deltaT}s; A={A}',alpha=0.8)
@@ -156,8 +157,7 @@ def plot_ccf(filepath,ax):
 plot_ccf('/Users/s.bykov/work/xray_pulsars/rxte/results/out90089-11-03-00G/products/sa_data_lc_5sec/ccf_0.95.qdp',ax_ccf)
 
 ax_ccf.set_xlabel('Delay, s')
-#ax_ccf.legend()
-plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ccf_{frac}_{Obs}_simul.pdf')
+ax_ccf.legend()
 
 plt.show()
 

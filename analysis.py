@@ -84,7 +84,7 @@ ignored_obs=[
 '90014-01-08-00',
 '90014-01-08-01',
 '90014-01-06-03',
-'90014-01-04-03']
+'90427-01-04-03']
 
 
 STOP
@@ -287,28 +287,6 @@ plt.savefig(savepath+f'eqw.png',dpi=500)
 plt.show()
 
 
-#%% plot eqw vs flux
-
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
-
-
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
-flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
-
-ax.errorbar(flux,eqw,eqw_err,flux_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
-
-ax.set_ylabel('Iron line equivalent width \n eV',color='k')
-ax.set_xlabel('RXTE/PCA Flux (3-12 keV), \n 10^(-8) cgs')
-ax.set_ylim(40,120)
-
-
-
-
-fig.tight_layout()
-sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_vs_flux.png',dpi=500)
-plt.show()
-
 #%% plot eqw vs distance
 
 fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
@@ -333,7 +311,7 @@ plt.show()
 
 #%% plot eqw vs time vs distance
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
 time=ObsParams.MJD_START
 
@@ -370,220 +348,179 @@ sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'eqw_vs_dist_in_time.pdf',dpi=500)
 plt.show()
 
-#%% plot eqw vs time vs flux
+# #%% plot eqw vs time with orbital convolution
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+# fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
-time=ObsParams.MJD_START
+# time=ObsParams.MJD_START
 
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
-ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+# eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
 
-ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+# ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
 
-ax.set_xlabel('Time, MJD')
+# ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylim(40,120)
 
-ax.set_ylim(50,110)
 
-ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
-ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
-#ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+# orbtime=np.linspace(53330,53420,200)
+# r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
+# #popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
+# #popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
+# #popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
+# popt,pcov=curve_fit(gauss,time,eqw,p0=[53370,20,50])
 
+# gaussian_depend=gauss(orbtime,popt[0],popt[1],popt[2])
+# inv=r**(-2)
+# y=gaussian_depend+70000*(inv-np.mean(inv)) #2000 for d^(-1), 70000 for d^(-2)
 
-ax2=ax.twinx()
+# ax.plot(orbtime,gaussian_depend,'k--',alpha=0.7)
+# ax.plot(orbtime,y,'k-',alpha=0.7)
 
-flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylabel('Equivalent width of iron line, eV')
+# ax.legend(loc='best')
 
-ax2.errorbar(time,flux,flux_err,fmt='.',color='g',marker='s',ms=4,alpha=0.8)
 
-ax2.set_ylabel('RXTE/PCA Flux (3-12 keV), \n 10^(-8) cgs',color='b')
+# fig.tight_layout()
+# sns.despine(fig,top=1,right=0)
+# plt.savefig(savepath+f'eqw_dist_convolve.pdf',dpi=500)
+# plt.show()
 
 
 
 
-fig.tight_layout()
-sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_vs_flux_in_time.png',dpi=500)
-plt.show()
 
 
 
+# #%% plot eqw vs time with  my orbital convolution
 
+# fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
-#%% plot eqw vs time with orbital convolution
+# time=ObsParams.MJD_START
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+# eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
 
-time=ObsParams.MJD_START
+# flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+# flux_time=time
 
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
 
-ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+# #asm light curve
+# #asm=np.genfromtxt('/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ASM_LC_V0332+53.txt',skip_header=5)
+# #flux_time=asm[:,0]
+# #flux=asm[:,7]
 
-ax.set_ylabel('Iron line equivalent width \n eV',color='k')
-ax.set_xlabel('Time, MJD')
-ax.set_ylim(40,120)
 
 
-orbtime=np.linspace(53330,53420,200)
-r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+# ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
 
-#popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
-#popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
-#popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
-popt,pcov=curve_fit(gauss,time,eqw,p0=[53370,20,50])
+# ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylim(40,120)
 
-gaussian_depend=gauss(orbtime,popt[0],popt[1],popt[2])
-inv=r**(-2)
-y=gaussian_depend+70000*(inv-np.mean(inv)) #2000 for d^(-1), 70000 for d^(-2)
 
-ax.plot(orbtime,gaussian_depend,'k--',alpha=0.7)
-ax.plot(orbtime,y,'k-',alpha=0.7)
+# orbtime=np.linspace(53330,53420,200)
+# r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
-ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width of iron line, eV')
-ax.legend(loc='best')
+# star_eqw=1/r**2
+# #star_eqw=1-np.sqrt(r**2-9**2)/r
+# star_eqw /=np.max(star_eqw)
+# star_eqw=star_eqw*35
 
+# from scipy import interpolate
+# #flux_funct=interpolate.interp1d(time,flux,fill_value='extrapolate')(orbtime)
+# flux_funct=interpolate.interp1d(flux_time,flux,fill_value=0.5,bounds_error=0)(orbtime)
 
-fig.tight_layout()
-sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_dist_convolve.pdf',dpi=500)
-plt.show()
+# disk_eqw=77*(flux_funct/np.max(flux_funct))**(3/20)+10
 
+# ax.plot(orbtime,star_eqw+disk_eqw,'k-',alpha=0.7)
 
+# ax.plot(orbtime,disk_eqw,'k-.',alpha=0.7)
+# #ax.plot(orbtime,star_eqw,'k-.',alpha=0.7)
 
 
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylabel('Equivalent width of iron line, eV')
+# ax.legend(loc='best')
 
 
+# fig.tight_layout()
+# sns.despine(fig,top=1,right=0)
+# #plt.savefig(savepath+f'eqw_dist_convolve_disk_and_star.pdf',dpi=500)
+# plt.show()
 
-#%% plot eqw vs time with  my orbital convolution
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
-time=ObsParams.MJD_START
+# #%% plot eqw vs time with BOTH orb convolutions
 
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+# fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
-flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
-flux_time=time
+# time=ObsParams.MJD_START
 
+# eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
 
-#asm light curve
-#asm=np.genfromtxt('/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ASM_LC_V0332+53.txt',skip_header=5)
-#flux_time=asm[:,0]
-#flux=asm[:,7]
+# ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
 
+# ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylim(40,120)
 
 
-ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+# orbtime=np.linspace(53330,53420,200)
+# r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
-ax.set_ylabel('Iron line equivalent width \n eV',color='k')
-ax.set_xlabel('Time, MJD')
-ax.set_ylim(40,120)
+# #popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
+# #popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
+# #popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
+# popt,pcov=curve_fit(gauss,time,eqw,p0=[53370,20,50])
 
+# gaussian_depend=gauss(orbtime,popt[0],popt[1],popt[2])
+# inv=r**(-2)
+# y=gaussian_depend+70000*(inv-np.mean(inv)) #2000 for d^(-1), 70000 for d^(-2)
 
-orbtime=np.linspace(53330,53420,200)
-r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+# ax.plot(orbtime,gaussian_depend,'g:',alpha=0.7)
+# ax.plot(orbtime,y,'g-',alpha=0.7)
 
-star_eqw=1/r**2
-#star_eqw=1-np.sqrt(r**2-9**2)/r
-star_eqw /=np.max(star_eqw)
-star_eqw=star_eqw*35
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylabel('Equivalent width of iron line, eV')
+# ax.legend(loc='best')
 
-from scipy import interpolate
-#flux_funct=interpolate.interp1d(time,flux,fill_value='extrapolate')(orbtime)
-flux_funct=interpolate.interp1d(flux_time,flux,fill_value=0.5,bounds_error=0)(orbtime)
 
-disk_eqw=77*(flux_funct/np.max(flux_funct))**(3/20)+10
 
-ax.plot(orbtime,star_eqw+disk_eqw,'k-',alpha=0.7)
+# flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+# flux_time=time
 
-ax.plot(orbtime,disk_eqw,'k-.',alpha=0.7)
-#ax.plot(orbtime,star_eqw,'k-.',alpha=0.7)
 
+# orbtime=np.linspace(53330,53420,200)
+# r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
 
-ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width of iron line, eV')
-ax.legend(loc='best')
+# star_eqw=1/r**2
+# #star_eqw=1-np.sqrt(r**2-9**2)/r
+# star_eqw /=np.max(star_eqw)
+# star_eqw=star_eqw*35
 
+# from scipy import interpolate
+# #flux_funct=interpolate.interp1d(time,flux,fill_value='extrapolate')(orbtime)
+# flux_funct=interpolate.interp1d(flux_time,flux,fill_value=0.5,bounds_error=0)(orbtime)
 
-fig.tight_layout()
-sns.despine(fig,top=1,right=0)
-#plt.savefig(savepath+f'eqw_dist_convolve_disk_and_star.pdf',dpi=500)
-plt.show()
+# disk_eqw=77*(flux_funct/np.max(flux_funct))**(3/20)
 
+# ax.plot(orbtime,star_eqw+disk_eqw,'r-',alpha=0.7)
 
+# ax.plot(orbtime,disk_eqw,'r:',alpha=0.7)
+# #ax.plot(orbtime,star_eqw,'k-.',alpha=0.7)
 
-#%% plot eqw vs time with BOTH orb convolutions
 
-fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+# ax.set_xlabel('Time, MJD')
+# ax.set_ylabel('Equivalent width of iron line, eV')
+# ax.legend(loc='best')
 
-time=ObsParams.MJD_START
 
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
-
-ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
-
-ax.set_ylabel('Iron line equivalent width \n eV',color='k')
-ax.set_xlabel('Time, MJD')
-ax.set_ylim(40,120)
-
-
-orbtime=np.linspace(53330,53420,200)
-r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
-
-#popt=np.array([5.33661218e+04, 1.58437049e+01, 3.58940948e+00])
-#popt,pcov=curve_fit(gauss,time[time<53385],eqw[time<53385],p0=[53370,20,50])
-#popt,pcov=curve_fit(gauss,time,eqw,sigma=eqw_err.max(axis=0),p0=[53370,20,50])
-popt,pcov=curve_fit(gauss,time,eqw,p0=[53370,20,50])
-
-gaussian_depend=gauss(orbtime,popt[0],popt[1],popt[2])
-inv=r**(-2)
-y=gaussian_depend+70000*(inv-np.mean(inv)) #2000 for d^(-1), 70000 for d^(-2)
-
-ax.plot(orbtime,gaussian_depend,'g:',alpha=0.7)
-ax.plot(orbtime,y,'g-',alpha=0.7)
-
-ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width of iron line, eV')
-ax.legend(loc='best')
-
-
-
-flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
-flux_time=time
-
-
-orbtime=np.linspace(53330,53420,200)
-r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
-
-star_eqw=1/r**2
-#star_eqw=1-np.sqrt(r**2-9**2)/r
-star_eqw /=np.max(star_eqw)
-star_eqw=star_eqw*35
-
-from scipy import interpolate
-#flux_funct=interpolate.interp1d(time,flux,fill_value='extrapolate')(orbtime)
-flux_funct=interpolate.interp1d(flux_time,flux,fill_value=0.5,bounds_error=0)(orbtime)
-
-disk_eqw=77*(flux_funct/np.max(flux_funct))**(3/20)
-
-ax.plot(orbtime,star_eqw+disk_eqw,'r-',alpha=0.7)
-
-ax.plot(orbtime,disk_eqw,'r:',alpha=0.7)
-#ax.plot(orbtime,star_eqw,'k-.',alpha=0.7)
-
-
-ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width of iron line, eV')
-ax.legend(loc='best')
-
-
-fig.tight_layout()
-sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_dist_convolve_both.pdf',dpi=500)
-plt.show()
+# fig.tight_layout()
+# sns.despine(fig,top=1,right=0)
+# plt.savefig(savepath+f'eqw_dist_convolve_both.pdf',dpi=500)
+# plt.show()
 
 
 
@@ -620,6 +557,54 @@ plt.savefig(savepath+f'eqw.pdf',dpi=500)
 plt.show()
 
 
+
+
+#%% plot eqw vs time without models but with flux and distance
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(12,6))
+ax_flux=ax.twinx()
+time=ObsParams.MJD_START
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+flux,flux_err=vals_and_errors(ObsParams,'cutoffpl_tot_flux',funct=lambda x: x/1e-8)
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax_flux.errorbar(time,flux,flux_err,fmt='.',color='gray',marker='o',ms=4,alpha=0.3)
+
+ax_flux.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='gray')
+ax_flux.set_xlabel('Time, MJD')
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='c')
+ax.set_xlabel('Time, MJD')
+ax.set_ylim(40,120)
+
+
+
+ax.set_xlabel('Time, MJD')
+ax.set_ylabel('Equivalent width of iron line, eV')
+ax.legend(loc='best')
+
+
+
+orbtime=np.linspace(53335,53430,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'r-.',alpha=0.6,lw=1)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.',color='r')
+
+ax2.spines["right"].set_position(("axes", +1.1))
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_flux_and_dist.pdf',dpi=500)
+plt.show()
 
 
 #%% find observations after 53400 with small exposure in phase-resolved
@@ -938,6 +923,40 @@ ax3.legend()
 plt.show()
 
 
+
+
+
+
+#%% plot eqw for GABS
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'gabs_eqw',funct=lambda x: 1e3*x)
+cond=ObsParams.gabs_chi2<2
+ax.errorbar(time[cond],eqw[cond],eqw_err.T[cond].T,fmt='.',color='c',marker='s',ms=4,label='gabs 3-40 keV (left)',alpha=0.8,zorder=10)
+
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+ax.set_xlabel('Time, MJD')
+#ax.set_ylim(40,120)
+
+
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+ax_tw=ax.twinx()
+ax_tw.errorbar(time,eqw,eqw_err,fmt='.',color='r',marker='s',label='cutoffpl 3-12 keV (right)',ms=4,alpha=0.8,zorder=-10)
+
+ax.legend(loc='upper left')
+ax_tw.legend(loc='upper right')
+ax_tw.set_ylim(40,120)
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eqw_gabsmodel.png',dpi=500)
+plt.show()
+
+
 #%% latex table
 from Misc.TeX_Tables import pandas_to_tex
 from Misc.TeX_Tables.pandas_to_tex import *
@@ -974,6 +993,8 @@ def tex_tbl():
                      transpose=transpose)
 df=ObsParams
 tex_tbl()
+
+
 
 
 

@@ -16,7 +16,7 @@ from glob import glob
 import os
 from scipy.optimize import curve_fit
 import shutil
-from Misc.TimeSeries import cross_corr
+from Misc.TimeSeries import cross_correlation
 from Misc.plot_spectra import Spectra
 from Misc.doppler_correction import correct_times
 from subprocess import call
@@ -93,7 +93,7 @@ msg_spe=msg
 
 
 
-#%% fit spectra with models
+#%% fit spectra with model cutoffpl 3-12 keV
 
 do_not_start_this_chunk
 
@@ -108,6 +108,36 @@ if input('start  calculation from the beginning?')=='y':
             xte_obs=ObservationXTE(ObsID)
 
             xte_obs.fit_std2_spe(model='cutoffpl')
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
+
+
+
+#%% fit spectra with model cutoffpl 3-40 keV
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+
+            xte_obs.fit_std2_spe(model='gabs')
 
         except Exception as e:
             print(e)
@@ -319,7 +349,52 @@ err_make_fb=err
 msg_make_fb=msg
 
 
-#%% SE fasebin - rising part of a flare:
+
+
+#%% SE fasebin - rising part of a flare: smaller number of bins
+
+ObsList_TOP_small=[
+ '90089-11-02-01',
+ '90089-11-02-02',
+ '90089-11-02-03',
+ '90089-11-02-05',
+ '90089-11-02-07',
+ '90089-11-02-08',
+ '90089-11-02-09',
+ '90089-11-02-10',
+ '90089-11-01-02',
+ '90089-11-01-03',
+ '90089-11-01-04']
+
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    ObsList=ObsList_TOP_small
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.make_fasebin(nph=8)
+            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.01)
+            xte_obs.ph_res_results()
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+err_make_fb=err
+msg_make_fb=msg
+
+
+
+
+
+#%% SE fasebin - rising part of a flare: all 12 bins
 ObsList_TOP=['90089-11-02-00',
  '90089-11-02-01',
  '90089-11-02-02',
