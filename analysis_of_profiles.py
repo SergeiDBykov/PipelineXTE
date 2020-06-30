@@ -421,7 +421,7 @@ def load_and_plot_data(ObsID,plot_evol=1):
 
 
         fig.tight_layout()
-        sns.despine(fig,top=1,right=0)
+        #sns.despine(fig,top=1,right=0)
         #sns.set(font_scale=0.5)
         fig.savefig(f'{pulse_profile_save_path}/Day{np.round(mjd,3)}_{ObsID}_evol.png',dpi=500)
         if ObsID in ObsList_RISE:
@@ -557,7 +557,7 @@ ax.set_xlabel('Time, MJD')
 ax.grid()
 
 fig.tight_layout()
-sns.despine(fig,top=1,right=0)
+#sns.despine(fig,top=1,right=0)
 plt.savefig(savepath+f'delay_all_mc_err.pdf',dpi=500)
 plt.show()
 
@@ -787,8 +787,8 @@ decay_phase_saw=['90014-01-03-01','90014-01-04-00']
 decay_phase_2=['90014-01-04-01','90014-01-05-02']
 
 
-PlotList=decay_phase_2
-PlotName='decay_phase_2'
+PlotList=rise_phase
+PlotName='rise_phase'
 
 
 ax_eqw = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
