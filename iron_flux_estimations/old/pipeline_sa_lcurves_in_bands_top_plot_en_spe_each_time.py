@@ -54,11 +54,12 @@ path_to_lc=f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/s
 class TimeSeries():
 
     def __init__(self,lcname):
-        self.fits=fits.open(path_to_lc+f'/{lcname}.lc_bary_orb_corr')
+        self.fits=fits.open(path_to_lc+f'/{lcname}.lc_bary')
         self.time=self.fits[1].data['time']
         self.rate=self.fits[1].data['rate']
         self.error=self.fits[1].data['error']
         self.binsize=np.median(np.diff(self.time))
+        #self.error=np.sqrt(self.rate*binsize)
         self.fits.close()
     def divide(self,val):
         self.rate=self.rate/val
@@ -195,7 +196,7 @@ def find_fe_flux(lclist,frac=1):
     diff_err=np.reshape(diff_err,N)
     return diff,diff_err
 
-frac=0.95
+frac=1
 fe_flux,fe_flux_err=find_fe_flux(lclist,frac=frac)
 
 figure()
@@ -237,8 +238,8 @@ print(f'Weighted mean/weighted std : {wmean/wstd}')
 #%% save data
 
 create_dir('fe_line')
-os.system(f'cp ch11.lc_bary_orb_corr fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr')
-with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mode='update') as hdul:
+os.system(f'cp ch11.lc_bary fe_line/python_lin_approx_fe_line_{frac}.lc_bary')
+with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary', mode='update') as hdul:
     hdul[1].data['rate']=fe_flux
     hdul[1].data['error']=fe_flux_err
     hdul.flush()  # changes are written back to original.fits
@@ -249,7 +250,8 @@ with fits.open(f'fe_line/python_lin_approx_fe_line_{frac}.lc_bary_orb_corr', mod
 
 #%% plot ccfs
 
-
+import seaborn as sns
+sns.set(style='ticks', palette='deep',context='notebook',rc={"xtick.top" : True,'xtick.direction':'inout','ytick.direction':'inout','xtick.minor.visible':True,'ytick.minor.visible':True})
 matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
 matplotlib.rcParams['figure.subplot.left']=0.15
 matplotlib.rcParams['figure.subplot.bottom']=0.15
@@ -290,7 +292,7 @@ ax_ccf.set_title(f'{Obs}')
 fig.tight_layout()
 sns.despine(fig,top=0,right=0)
 plt.show()
-plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ccf_{frac}_{Obs}.pdf')
+#plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/ccf_{frac}_{Obs}.pdf')
 plt.savefig(f'ccf_{frac}_{Obs}.pdf')
 
 

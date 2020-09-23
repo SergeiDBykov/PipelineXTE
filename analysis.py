@@ -57,7 +57,7 @@ def vals_and_errors(ObsParams,name,funct=lambda x: x):
 savepath='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/'
 results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
 
-filename='standard_pipeline'
+filename='standard_pipeline' #standard_pipeline_small_width standard_pipeline
 ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
 ObsParams=ObsParams.sort_values('MJD_START')
 
@@ -94,6 +94,8 @@ STOP
 
 model='cutoffpl'
 
+
+
 fig,ax=plt.subplots()
 
 ObsParams[model+'_chi2'].hist(ax=ax,color='b',alpha=0.5,bins=25,label=model+'_chi2')
@@ -102,7 +104,7 @@ plt.show()
 
 msg=f"chi2_{model}: {sum(ObsParams[model+'_chi2']>2)} obs with chi2 more than 2"
 ax.set_title(msg,fontsize=8)
-plt.savefig(savepath+f'{model}_chi2.png',dpi=250)
+#plt.savefig(savepath+f'{model}_chi2.png',dpi=250)
 
 #%%plot flux continuum and iron
 
@@ -179,6 +181,23 @@ plt.show()
 
 
 
+#%% plot iron line energy
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+
+time=ObsParams.MJD_START
+
+el,el_err=vals_and_errors(ObsParams,'cutoffpl_eline')
+ax.errorbar(time,el,el_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line energy \n eV',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.savefig(savepath+f'eline.pdf',dpi=500)
+plt.show()
 
 
 
@@ -227,7 +246,7 @@ ax2.spines["right"].set_position(("axes", +1.15))
 
 fig.tight_layout()
 sns.despine(fig,top=1,right=0)
-plt.savefig(savepath+f'eqw_flux_and_dist.pdf',dpi=500)
+#plt.savefig(savepath+f'eqw_flux_and_dist.pdf',dpi=500)
 plt.show()
 
 
@@ -493,6 +512,314 @@ def tex_tbl():
                      transpose=transpose)
 df=ObsParams
 tex_tbl()
+
+
+
+
+#%% cutoffpl with edge: line energy, etc
+
+
+#%%eqw
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+
+time=ObsParams.MJD_START
+
+eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_edge_eqw',funct=lambda x: 1e3*x)
+ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line equivalent width \n eV',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+ax.set_ylim(50,110)
+
+ax.axvspan(53340.29,53360.00,alpha=0.05, color='gray')
+ax.axvspan(53384.36,53428.51,alpha=0.05, color='gray')
+#ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
+
+orbtime=np.linspace(53335,53420,200)
+r,_,_,_,_=doppler.kepler_solution(orbtime*day2sec,doppler.orb_params_v0332)
+
+
+ax2=ax.twinx()
+
+
+ax2.plot(orbtime,r,'b-.',alpha=0.6,lw=0.5)
+
+
+ax2.set_ylabel('Distance to the companion, \n lt-sec.')
+
+
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.show()
+
+
+
+#%% line energy
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+
+time=ObsParams.MJD_START
+
+eline,eline_err=vals_and_errors(ObsParams,'cutoffpl_edge_eline',funct=lambda x:x)
+ax.errorbar(time,eline,eline_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('Iron line energy \n eV',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.show()
+
+
+
+#%% absorbtion edge tau
+
+
+fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
+
+time=ObsParams.MJD_START
+
+eline,eline_err=vals_and_errors(ObsParams,'cutoffpl_edge_maxtau',funct=lambda x:x*100)
+ax.errorbar(time,eline,eline_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+
+ax.set_ylabel('K-edge tau *100',color='k')
+
+ax.set_xlabel('Time, MJD')
+
+
+fig.tight_layout()
+sns.despine(fig,top=1,right=0)
+plt.show()
+
+#%% spectral stuff
+
+
+fig = plt.figure(figsize=(6.6*4, 4*6.6))
+rows=6
+cols=5
+
+ax = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=5)
+ax2=plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=5)
+ax3=plt.subplot2grid((rows,cols), (4, 0), rowspan=2, colspan=5)
+
+
+time=ObsParams.MJD_START
+
+model='cutoffpl_edge'
+color='k'
+
+eqw,eqw_err=vals_and_errors(ObsParams,model+'_eqw')
+eqw=eqw*1000
+eqw_err=eqw_err*1000
+
+
+ecol='k'
+ax.plot(time,eqw,marker='s',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+ax.errorbar(time,eqw,eqw_err,ecolor=ecol,fmt='none',alpha=0.5)
+
+
+efold=ObsParams[model+'_efold']
+
+maxtau,maxtau_err=vals_and_errors(ObsParams,model+'_maxtau',funct=lambda x:100*x)
+ax3.errorbar(time,maxtau,maxtau_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
+ax3.set_ylabel('max_tau*100')
+eline,eline_err=vals_and_errors(ObsParams,'cutoffpl_edge_eline',funct=lambda x:x)
+ax4=ax3.twinx()
+ax4.errorbar(time,eline,eline_err,fmt='.',color='r',marker='d',ms=4,alpha=0.8)
+
+ax4.set_ylabel('Iron line energy \n eV',color='k')
+ax4.axhline(6.4,color='b',zorder=-10,ls=':',alpha=0.7)
+
+
+gamma=ObsParams[model+'_po']
+ax2.plot(time,efold,marker='d',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_efold')
+
+ax2_twin=ax2.twinx()
+ax2_twin.plot(time,gamma,marker='.',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_po')
+ax2_twin.set_ylabel('Gamma')
+
+
+ax.set_title(filename)
+ax.set_xlabel('Time, MJD')
+ax.set_ylabel('Equivalent width of iron line, eV')
+ax.legend(loc='best',fontsize=7)
+ax.grid()
+
+ax2.set_xlabel('Time, MJD')
+ax2.set_ylabel('E_fold, keV')
+ax2.legend(loc='best',fontsize=7)
+ax2.grid()
+
+ax3.legend()
+
+plt.show()
+
+
+
+#%% compare with cutoffpl
+
+
+
+fig = plt.figure(figsize=(6.6*4, 4*6.6))
+rows=6
+cols=5
+ax = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=5)
+
+ax2=plt.subplot2grid((rows,cols), (5, 0), rowspan=1, colspan=5,sharex=ax)
+ax2_twin=ax2.twinx()
+
+ax3=plt.subplot2grid((rows,cols), (2, 0), rowspan=3, colspan=5,sharex=ax)
+ax3_twin=ax3.twinx()
+
+time=ObsParams.MJD_START
+
+
+
+
+for model,color in zip(['cutoffpl_edge','cutoffpl'],['k','r']):
+
+    eqw,eqw_err=vals_and_errors(ObsParams,model+'_eqw')
+    eqw=eqw*1000
+    eqw_err=eqw_err*1000
+
+
+    ecol='k'
+    ax.plot(time,eqw,marker='s',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+    ax.errorbar(time,eqw,eqw_err,ecolor=ecol,fmt='none',alpha=0.5)
+
+
+    efold=ObsParams[model+'_efold']
+
+    maxtau,maxtau_err=vals_and_errors(ObsParams,model+'_maxtau',funct=lambda x:100*x)
+    #ax3_twin.errorbar(time,maxtau,maxtau_err,fmt='.',color=color,marker='s',ms=4,alpha=0.8)
+    #ax3_twin.set_ylabel('max_tau*100')
+    eline,eline_err=vals_and_errors(ObsParams,model+'_eline',funct=lambda x:x)
+
+    ax3.errorbar(time,eline,eline_err,fmt='.',color=color,marker='d',ms=4,alpha=0.8)
+
+    ax3.axhline(6.4,color='b',zorder=-10,ls=':',alpha=0.7)
+
+
+    gamma=ObsParams[model+'_po']
+    ax2.plot(time,efold,marker='d',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_efold')
+
+
+    ax2_twin.plot(time,gamma,marker='.',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_po')
+
+ax2_twin.set_ylabel('Gamma')
+
+ax3.set_ylabel('Iron line energy \n eV',color='k')
+ax3.grid()
+ax3.set_ylim(6.3,6.6)
+
+ax.set_title(filename)
+ax.set_xlabel('Time, MJD')
+ax.set_ylabel('Equivalent width of iron line, eV')
+ax.legend(loc='best',fontsize=7)
+ax.grid()
+
+ax2.set_xlabel('Time, MJD')
+ax2.set_ylabel('E_fold, keV')
+ax2.legend(loc='best',fontsize=7)
+ax2.grid()
+
+ax3.legend()
+
+plt.show()
+
+
+
+
+
+#%% compare fluxes
+
+
+
+fig,ax = plt.subplots(figsize=(6.6*4, 4*6.6))
+rows=4
+cols=5
+ax = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=5)
+
+ax2=plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=5)
+
+time=ObsParams.MJD_START
+
+
+
+
+for model,color in zip(['cutoffpl_edge','cutoffpl'],['k','r']):
+
+    flux_line,flux_line_err=vals_and_errors(ObsParams,model+'_fe_flux',lambda x: x/1e-10)
+
+    ecol='k'
+    ax.plot(time,flux_line,marker='s',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+    ax.errorbar(time,flux_line,flux_line_err,ecolor=ecol,fmt='none',alpha=0.5)
+
+    norm_line,norm_line_err=vals_and_errors(ObsParams,model+'_norm_line',lambda x: x*1000)
+
+    ecol='k'
+    ax2.plot(time,norm_line,marker='d',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+    ax2.errorbar(time,norm_line,norm_line_err,ecolor=ecol,fmt='none',alpha=0.5)
+
+
+ax.set_title(filename)
+ax.set_xlabel('Time, MJD')
+ax.set_ylabel('Gaussian flux, 1e-10 cgs')
+ax.legend(loc='best',fontsize=7)
+ax.grid()
+
+ax2.set_xlabel('Time, MJD')
+ax2.set_ylabel('Gaussian norm, 1000 ph/s/cm^2')
+ax2.legend(loc='best',fontsize=7)
+ax2.grid()
+
+plt.show()
+
+
+
+
+
+
+
+#%% plot ration or delchi for cutoffpl continua
+from pipeline_core import xspec_scripts_path
+fig,ax = plt.subplots(figsize=(8, 3))
+
+
+for ObsID in ['90089-11-01-04','90089-11-02-00','90089-11-03-01G','90089-11-05-08G','90427-01-03-00','90014-01-03-020',
+              '90427-01-04-02']:
+
+    xte_obs=ObservationXTE(ObsID)
+    ser=xte_obs.pandas_series()
+    model='cutoffpl_no_gauss'
+    spe_path='/products/pcu2_top'
+    os.chdir(xte_obs.out_path+spe_path)
+    os.system('rm -rf cutoffpl_no_gauss')
+    os.mkdir('cutoffpl_no_gauss')
+
+    os.system(f'xspec - {xspec_scripts_path}{model}.txt')
+
+    data=np.genfromtxt('cutoffpl_no_gauss/mean_spe_rat.dat')
+
+    label=f"Obs {ObsID}, F_{{3-12 keV}}={'%.2f'%(ser.cutoffpl_edge_tot_flux/1e-8)} 10^{-8} csg"
+
+    ax.errorbar(data[0],data[1],data[2],data[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
+    ax.set_xscale('log')
+
+
+
+ax.legend(loc='upper left',fontsize=8)
+ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
+ax.set_ylabel('data/ [cutoffpl model] OR sqrt(chi^2)',fontsize=8)
+
+plt.show()
+
 
 
 #%% JUNE TRASH

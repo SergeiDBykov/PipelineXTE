@@ -9,12 +9,12 @@ Created on Thu May 14 15:06:23 2020
 
 from pipeline_core import *
 
-ObsID='90089-11-03-00G' # 90089-11-03-00G or 90089-11-03-01G 90089-11-03-02
+ObsID='90089-11-03-01G' # 90089-11-03-00G or 90089-11-03-01G 90089-11-03-02
 xte_obs=ObservationXTE(ObsID)
 os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
 
 
-binsize=5
+binsize=0.1
 
 
 
@@ -147,10 +147,10 @@ for channel in glob('*lc'):
     #run_command(bcorr,out_path='./',dull=0)
     print(bcorr)
 
-#%% orb corr
-for channel in glob('*lc_bary'):
-    import Misc
-    correct_times(f'{channel}',Misc.doppler_correction.orb_params_v0332)
+# #%% orb corr
+# for channel in glob('*lc_bary'):
+#     import Misc
+#     correct_times(f'{channel}',Misc.doppler_correction.orb_params_v0332)
 
 
 

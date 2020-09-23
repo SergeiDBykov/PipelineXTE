@@ -122,6 +122,34 @@ msg_spe_fit=msg
 
 
 
+#%% fit spectra with model cutoffpl 3-12 keV with  edge
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='cutoffpl_edge',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
+
+
 #%% fit spectra with model cutoffpl and gabs
 
 
@@ -204,7 +232,7 @@ if input('start  calculation from the beginning?')=='y':
 for e,m in zip(err,msg):
     print(e,m)
 
-name='standard_pipeline'
+name='standard_pipeline' #standard_pipeline_small_width standard_pipeline
 pd.to_pickle(ObsParams,f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.pkl')
 ObsParams.to_csv(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.csv',index=0)
 
@@ -334,7 +362,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
 
 
         except Exception as e:
@@ -362,7 +390,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
             #xte_obs.ph_res_results()
 
         except Exception as e:
@@ -375,50 +403,6 @@ for e,m in zip(err,msg):
 
 err_make_fb=err
 msg_make_fb=msg
-
-
-
-
-#%% SE fasebin - rising part of a flare: smaller number of bins
-
-ObsList_TOP_small=[
- '90089-11-02-01',
- '90089-11-02-02',
- '90089-11-02-03',
- '90089-11-02-05',
- '90089-11-02-07',
- '90089-11-02-08',
- '90089-11-02-09',
- '90089-11-02-10',
- '90089-11-01-02',
- '90089-11-01-03',
- '90089-11-01-04']
-
-
-err=[]
-msg=[]
-if input('start  calculation from the beginning?')=='y':
-    ObsList=ObsList_TOP_small
-    for k,ObsID in enumerate(ObsList):
-        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
-        try:
-            xte_obs=ObservationXTE(ObsID)
-            xte_obs.make_fasebin(nph=8)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
-            #xte_obs.ph_res_results()
-
-        except Exception as e:
-            print(e)
-            print('ERROR OCCURED WITH', ObsID)
-            err.append(ObsID)
-            msg.append(e)
-for e,m in zip(err,msg):
-    print(e,m)
-
-err_make_fb=err
-msg_make_fb=msg
-
-
 
 
 
@@ -449,7 +433,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=12)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
             #xte_obs.ph_res_results()
 
         except Exception as e:
@@ -462,6 +446,50 @@ for e,m in zip(err,msg):
 
 err_make_fb=err
 msg_make_fb=msg
+
+
+#%% SE fasebin - rising part of a flare: smaller number of bins
+
+ObsList_TOP_small=[
+ '90089-11-02-01',
+ '90089-11-02-02',
+ '90089-11-02-03',
+ '90089-11-02-05',
+ '90089-11-02-07',
+ '90089-11-02-08',
+ '90089-11-02-09',
+ '90089-11-02-10',
+ '90089-11-01-02',
+ '90089-11-01-03',
+ '90089-11-01-04']
+
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    ObsList=ObsList_TOP_small
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.make_fasebin(nph=8)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            #xte_obs.ph_res_results()
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+err_make_fb=err
+msg_make_fb=msg
+
+
+
+
 
 
 #%% SA fasebin - fading part
@@ -501,7 +529,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
             #xte_obs.ph_res_results()
 
         except Exception as e:
@@ -554,7 +582,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=8)
-            xte_obs.fit_ph_res(chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
             #xte_obs.ph_res_results()
 
         except Exception as e:
@@ -568,6 +596,37 @@ for e,m in zip(err,msg):
 err_make_fb=err
 msg_make_fb=msg
 
+
+#%% SE fasebin - rising part of a flare: one-peaked profile stack
+
+ObsList_TOP_small=[
+ '90089-11-01-02',
+ '90089-11-01-03',
+ '90089-11-01-04']
+
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    ObsList=ObsList_TOP_small
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.make_fasebin(nph=8)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            #xte_obs.ph_res_results()
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+err_make_fb=err
+msg_make_fb=msg
 
 
 #%% FASEBIN - TIME DELAYS, PF, etc

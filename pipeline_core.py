@@ -755,7 +755,8 @@ class ObservationXTE():
         sp_data_pars=['chi2','dof','eqw','eqw_lo','eqw_hi',
                       'tot_flux','tot_flux_lo','tot_flux_hi',
                       'fe_flux','fe_flux_lo','fe_flux_hi',
-                      'po','efold','ecut','eline','norm_line']
+                      'po','efold','ecut','eline','eline_lo','eline_hi','norm_line',
+                      'norm_line_lo','norm_line_hi','maxtau','maxtau_lo','maxtau_hi']
         sp_data_pars=[model+'_'+par for par in sp_data_pars]
         for name,val in zip(sp_data_pars,sp_data):
             self.write_to_obs_info(self.spe_info_file,name,val)
@@ -973,7 +974,7 @@ class ObservationXTE():
                   #line = line.replace('45658',mjd_start)
                   #line = line.replace('57346',mjd_stop)
                   line=line.replace('2.2 P','0.0 P')
-                  line = line.replace('53360.000000000',mjd_start)
+                  #line = line.replace('53360.000000000',mjd_start)
                   #line = line.replace('2.2','0.0')
                   print(line)
             else:
