@@ -26,14 +26,15 @@ from Misc.doppler_correction import  day2sec
 
 
 matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
-matplotlib.rcParams['figure.subplot.left']=0.15
+matplotlib.rcParams['figure.subplot.left']=0.10
 matplotlib.rcParams['figure.subplot.bottom']=0.15
-matplotlib.rcParams['figure.subplot.right']=0.85
-matplotlib.rcParams['figure.subplot.top']=0.95
+matplotlib.rcParams['figure.subplot.right']=0.9
+matplotlib.rcParams['figure.subplot.top']=0.9
+
 
 
 import seaborn as sns
-sns.set(style='ticks', palette='deep',context='notebook')
+sns.set(style='ticks', palette='deep',context='notebook',rc={"xtick.top" : True,'xtick.direction':'inout','ytick.direction':'inout','xtick.minor.visible':True,'ytick.minor.visible':True})
 
 plt.ion()
 
@@ -43,12 +44,20 @@ def vals_and_errors(ObsParams,name,funct=lambda x: x):
     elif isinstance(ObsParams,pd.core.series.Series):
         par,Min,Max=funct(ObsParams[name]),funct(ObsParams[name+'_lo']),funct(ObsParams[name+'_hi'])
 
+    uplim_ind=Min==0
+
     low = par - Min
     hi  =  Max - par
     parr = par
 
+
+    parr[uplim_ind]=hi[uplim_ind]
+    low[uplim_ind]=parr[uplim_ind]
+    hi[uplim_ind]=0
+
+
     err=np.vstack((low,hi))
-    #return np.array((parr,err))
+
     return parr,err
 
 
@@ -73,38 +82,227 @@ ObsParams.loc[ObsParams.fasebin_cfg=='None','config']='-'
 #B\_16ms\_46M\_0\_49\_H
 
 
-ignored_obs=[
-'90014-01-05-03',
-'90014-01-05-06',
-'90014-01-06-00',
-'90014-01-07-01',
-'90014-01-07-03',
-'90014-01-07-02',
-'90014-01-07-00',
-'90014-01-08-00',
-'90014-01-08-01',
-'90014-01-06-03',
-'90427-01-04-03']
 
+
+#ObsParams=ObsParams[~ObsParams.ObsID.isin(ignored_obs)]
 
 STOP
 
 
-#%% plot chi2 histogram
 
-model='cutoffpl'
+#%% compare spectral parameters
+time=ObsParams.MJD_START
+
+for par in ['norm_line',
+            'eqw','eline',
+            'edgeTau']:
+
+    fig,ax=plt.subplots(figsize=(9,6))
+
+    for model,color in zip(['cutoffpl','edge_cutoffpl'],['k','r']):
+
+        if model=='cutofpl' and par=='edgeTau':
+            1
+        else:
+            par_val,par_err=vals_and_errors(ObsParams,model+'_'+par,lambda x: x)
+            ecol='k'
+            ax.plot(time,par_val,marker='d',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+            ax.errorbar(time,par_val,par_err,ecolor=ecol,fmt='none',alpha=0.5)
+            ax.set_ylim(0.95*min(par_val),1.1*max(par_val))
+    ax.set_ylabel(par)
+    ax.set_xlabel('Time, MJD')
+    ax.grid()
+    fig.savefig(savepath+f'{par}_{model}.png')
+
+
+#%% compare lines energies
+fig,ax=plt.subplots(figsize=(6,4))
+for model in ['cutoffpl','edge_cutoffpl','ionize_edge_cutoffpl']:
+    eline=ObsParams[model+'_eline'].values
+    eline_lo=ObsParams[model+'_eline_lo']
+    eline_hi=ObsParams[model+'_eline_hi']
+    eline_err=np.max((eline-eline_lo,eline_hi-eline),axis=0)
+
+    ax.hist(eline,alpha=0.5,bins=25,label=model+f', mean={"%.2f" %np.mean(eline)} \n weighted mean {"%.2f"%np.average(eline,weights=eline_err**(-2))} ')
+    ax.set_xlabel('Line energy, keV')
+    plt.show()
+ax.legend()
+plt.savefig(savepath+f'eline_hist.png',dpi=250)
 
 
 
+
+
+#%% compare chi2
 fig,ax=plt.subplots()
+for model in ['cutoffpl','edge_cutoffpl']:
+    chi2=ObsParams[model+'_chi2']
+    ax.hist(chi2,alpha=0.5,bins=25,label=model+f', mean={"%.2f" %np.mean(chi2)}')
+    ax.set_xlabel('chi2_red')
+    plt.show()
+ax.legend()
+plt.savefig(savepath+f'chi2_hist.png',dpi=250)
 
-ObsParams[model+'_chi2'].hist(ax=ax,color='b',alpha=0.5,bins=25,label=model+'_chi2')
-ax.set_xlabel('chi2')
+
+
+#%% plot cutoffpl residuals no gauss - finding K-edge
+
+def plot_cutoffpl_ratio(ObsIDs,ax=None):
+    model='no_gauss_cutoffpl'
+    if ax==None:
+        fig,ax = plt.subplots(figsize=(8, 6))
+    else:
+        pass
+
+    for ObsID in ObsIDs:
+
+        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/{model}/no_gauss_ra.dat')
+
+
+        label=f"Obs {ObsID}"
+
+        ax.errorbar(data1[0],data1[1],data1[2],data1[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
+    ax.set_xscale('log')
+
+    ax.legend(loc='upper left',fontsize=8)
+    ax.grid('y')
+    ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
+    ax.set_ylabel('data / best fit cutoffpl ',fontsize=8)
+    ax.set_xlabel('Energy, keV')
+    plt.savefig(savepath+f'cutoffpl_ratio.png',dpi=250)
+
+
+plot_cutoffpl_ratio(['90089-11-02-03','90089-11-03-01G','90089-22-01-01G','90014-01-05-04'])
+
+
+
+
+#%% plot residuals after gauss and edge
+
+fig = plt.figure(figsize=(6.6, 6.6))
+plt.subplots_adjust(hspace=0)
+rows=4
+cols=3
+
+ax_eeufs=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+ax_del1 = plt.subplot2grid((rows,cols), (2, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+ax_del2=plt.subplot2grid((rows,cols), (3, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+#ax_del3=plt.subplot2grid((rows,cols), (4, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+
+for ObsID,color in zip(['90089-11-03-01G','90089-22-01-01G','90427-01-03-06'],['k','b','g']):
+        label=ObsID
+        eeufs=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl/mean_spe_eeufs.dat')
+        ax_eeufs.errorbar(eeufs[0],eeufs[1],eeufs[2],eeufs[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl/mean_spe_del.dat')
+        ax_del1.errorbar(del1[0],del1[1],del1[2],del1[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del2=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/edge_cutoffpl/mean_spe_del.dat')
+        ax_del2.errorbar(del2[0],del2[1],del2[2],del2[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+ax_eeufs.legend()
+ax_eeufs.set_ylabel('Ph/cm/s/keV')
+ax_del1.set_ylabel('Sigma \n cutoffpl+gauss')
+ax_del1.grid('y')
+ax_del2.set_ylabel('Sigma \n cutoffpl*edge+gauss')
+ax_del2.grid('y')
+ax_del2.set_xlabel('Energy, keV')
+ax_eeufs.set_xscale('log')
+
+
+
+
+
+
+#%% compare models
+
+
+fig = plt.figure(figsize=(6.6*4, 4*6.6))
+plt.subplots_adjust(hspace=0)
+rows=8
+cols=5
+
+ax_norm=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=5)
+ax_eqw = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=5,sharex=ax_norm)
+ax_eline=plt.subplot2grid((rows,cols), (4, 0), rowspan=2, colspan=5,sharex=ax_norm)
+
+ax_edge=plt.subplot2grid((rows,cols), (6, 0), rowspan=1, colspan=5,sharex=ax_norm)
+
+ax_po=plt.subplot2grid((rows,cols), (7, 0), rowspan=1, colspan=5,sharex=ax_norm)
+ax_ecut=ax_po.twinx()
+
+time=ObsParams.MJD_START
+
+
+
+
+for model,color in zip(['edge_cutoffpl','cutoffpl'],['k','r']):
+
+
+    norm_line,norm_line_err=vals_and_errors(ObsParams,model+'_norm_line',lambda x: x*1000)
+
+    ecol='k'
+    ax_norm.semilogx(time,norm_line,marker='d',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+    ax_norm.errorbar(time,norm_line,norm_line_err,ecolor=ecol,fmt='none',alpha=0.5)
+    ax_norm.set_ylim(0.9*min(norm_line),1.1*max(norm_line))
+
+
+    eqw,eqw_err=vals_and_errors(ObsParams,model+'_eqw',funct=lambda x: x*1000)
+
+    ecol='k'
+    ax_eqw.plot(time,eqw,marker='s',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+    ax_eqw.errorbar(time,eqw,eqw_err,ecolor=ecol,fmt='none',alpha=0.5)
+
+
+
+
+    eline,eline_err=vals_and_errors(ObsParams,model+'_eline',funct=lambda x:x)
+
+    ax_eline.errorbar(time,eline,eline_err,fmt='.',color=color,marker='d',ms=4,alpha=0.8)
+    ax_eline.axhline(6.4,color='b',zorder=-10,ls=':',alpha=0.7)
+    if model=='edge_cutoffpl':
+        maxtau,maxtau_err=vals_and_errors(ObsParams,model+'_edgeTau',funct=lambda x:100*x)
+        ax_edge.errorbar(time,maxtau,maxtau_err,fmt='.',color=color,marker='d',ms=4,alpha=0.8)
+        ax_edge.set_ylim(0,5)
+
+    ecut,ecut_err=vals_and_errors(ObsParams, model+'_ecut')
+    po,po_err=vals_and_errors(ObsParams, model+'_po')
+
+    ax_po.errorbar(time,po,po_err,fmt='.',color=color,marker='d',ms=4,alpha=0.8,label=model+'_ecut')
+    ax_ecut.errorbar(time,ecut,ecut_err,marker='.',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_po')
+
+
+
+ax_norm.set_xlabel('Time, MJD')
+ax_norm.set_ylabel('Gaussian norm, 1000 ph/s/cm^2')
+ax_norm.legend(loc='best',fontsize=7)
+ax_norm.grid()
+
+
+ax_po.set_ylabel('Gamma')
+ax_ecut.set_ylabel('Cutoff energy, keV')
+
+ax_eline.set_ylabel('Iron line energy \n eV',color='k')
+ax_eline.grid()
+ax_eline.set_ylim(6.3,6.6)
+
+ax_eqw.set_title(filename)
+ax_eqw.set_xlabel('Time, MJD')
+ax_eqw.set_ylabel('Equivalent width of iron line, eV')
+ax.legend(loc='best',fontsize=7)
+ax.grid()
+
+ax_ecut.set_xlabel('Time, MJD')
+ax_ecut.legend(loc='best',fontsize=7)
+
+
 plt.show()
 
-msg=f"chi2_{model}: {sum(ObsParams[model+'_chi2']>2)} obs with chi2 more than 2"
-ax.set_title(msg,fontsize=8)
-#plt.savefig(savepath+f'{model}_chi2.png',dpi=250)
+
+
+
+
+
 
 #%%plot flux continuum and iron
 
@@ -662,78 +860,6 @@ plt.show()
 
 
 
-#%% compare with cutoffpl
-
-
-
-fig = plt.figure(figsize=(6.6*4, 4*6.6))
-rows=6
-cols=5
-ax = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=5)
-
-ax2=plt.subplot2grid((rows,cols), (5, 0), rowspan=1, colspan=5,sharex=ax)
-ax2_twin=ax2.twinx()
-
-ax3=plt.subplot2grid((rows,cols), (2, 0), rowspan=3, colspan=5,sharex=ax)
-ax3_twin=ax3.twinx()
-
-time=ObsParams.MJD_START
-
-
-
-
-for model,color in zip(['cutoffpl_edge','cutoffpl'],['k','r']):
-
-    eqw,eqw_err=vals_and_errors(ObsParams,model+'_eqw')
-    eqw=eqw*1000
-    eqw_err=eqw_err*1000
-
-
-    ecol='k'
-    ax.plot(time,eqw,marker='s',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
-    ax.errorbar(time,eqw,eqw_err,ecolor=ecol,fmt='none',alpha=0.5)
-
-
-    efold=ObsParams[model+'_efold']
-
-    maxtau,maxtau_err=vals_and_errors(ObsParams,model+'_maxtau',funct=lambda x:100*x)
-    #ax3_twin.errorbar(time,maxtau,maxtau_err,fmt='.',color=color,marker='s',ms=4,alpha=0.8)
-    #ax3_twin.set_ylabel('max_tau*100')
-    eline,eline_err=vals_and_errors(ObsParams,model+'_eline',funct=lambda x:x)
-
-    ax3.errorbar(time,eline,eline_err,fmt='.',color=color,marker='d',ms=4,alpha=0.8)
-
-    ax3.axhline(6.4,color='b',zorder=-10,ls=':',alpha=0.7)
-
-
-    gamma=ObsParams[model+'_po']
-    ax2.plot(time,efold,marker='d',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_efold')
-
-
-    ax2_twin.plot(time,gamma,marker='.',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6,label=model+'_po')
-
-ax2_twin.set_ylabel('Gamma')
-
-ax3.set_ylabel('Iron line energy \n eV',color='k')
-ax3.grid()
-ax3.set_ylim(6.3,6.6)
-
-ax.set_title(filename)
-ax.set_xlabel('Time, MJD')
-ax.set_ylabel('Equivalent width of iron line, eV')
-ax.legend(loc='best',fontsize=7)
-ax.grid()
-
-ax2.set_xlabel('Time, MJD')
-ax2.set_ylabel('E_fold, keV')
-ax2.legend(loc='best',fontsize=7)
-ax2.grid()
-
-ax3.legend()
-
-plt.show()
-
-
 
 
 
@@ -792,8 +918,7 @@ from pipeline_core import xspec_scripts_path
 fig,ax = plt.subplots(figsize=(8, 3))
 
 
-for ObsID in ['90089-11-01-04','90089-11-02-00','90089-11-03-01G','90089-11-05-08G','90427-01-03-00','90014-01-03-020',
-              '90427-01-04-02']:
+for ObsID in ['90014-01-05-03']:#,'90089-11-01-04','90089-11-02-00','90089-11-03-01G','90089-11-05-08G','90427-01-03-00','90014-01-03-020', '90427-01-04-02']:
 
     xte_obs=ObservationXTE(ObsID)
     ser=xte_obs.pandas_series()
@@ -807,7 +932,7 @@ for ObsID in ['90089-11-01-04','90089-11-02-00','90089-11-03-01G','90089-11-05-0
 
     data=np.genfromtxt('cutoffpl_no_gauss/mean_spe_rat.dat')
 
-    label=f"Obs {ObsID}, F_{{3-12 keV}}={'%.2f'%(ser.cutoffpl_edge_tot_flux/1e-8)} 10^{-8} csg"
+    label=f"Obs {ObsID}, F_{{3-12 keV}}={'%.2f'%(ser.edge_cutoffpl_cutoffpl_flux/1e-8)} 10^{-8} csg"
 
     ax.errorbar(data[0],data[1],data[2],data[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
     ax.set_xscale('log')

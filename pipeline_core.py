@@ -23,6 +23,7 @@ from subprocess import call
 from scipy.signal import argrelextrema
 from scipy import stats
 
+pd.set_option('display.max_rows', None)
 
 def open_dir():
     call(['open',os.getcwd()])
@@ -737,9 +738,9 @@ class ObservationXTE():
         os.system(f'mv stripped.txt ./spe_info_{ObsID}.txt')
 
         os.chdir(self.out_path+spe_path)
-        for filePath in ['cutoffpl.xcm','pohi.xcm','mean_spe.dat',f'mean_sp_{ObsID}.ps',f'mean_sp.ps','mean_sp_pohi.ps']:
-            if os.path.exists(os.getcwd()+'/'+filePath):
-                os.remove(os.getcwd()+'/'+filePath)
+        # for filePath in ['cutoffpl.xcm','pohi.xcm','mean_spe.dat',f'mean_sp_{ObsID}.ps',f'mean_sp.ps','mean_sp_pohi.ps']:
+        #     if os.path.exists(os.getcwd()+'/'+filePath):
+        #         os.remove(os.getcwd()+'/'+filePath)
 
         if os.path.exists(model):
             shutil.rmtree(model)
@@ -752,11 +753,15 @@ class ObservationXTE():
         os.chdir(model)
         #write spectral data to obs_info
         sp_data=np.genfromtxt('mean_spe.dat')
-        sp_data_pars=['chi2','dof','eqw','eqw_lo','eqw_hi',
-                      'tot_flux','tot_flux_lo','tot_flux_hi',
-                      'fe_flux','fe_flux_lo','fe_flux_hi',
-                      'po','efold','ecut','eline','eline_lo','eline_hi','norm_line',
-                      'norm_line_lo','norm_line_hi','maxtau','maxtau_lo','maxtau_hi']
+        sp_data_pars=['chi2','dof',
+                      'cutoffpl_flux','cutoffpl_flux_lo','cutoffpl_flux_hi',
+                      'po','po_lo','po_hi','ecut','ecut_lo','ecut_hi',
+                      'eline','eline_lo','eline_hi',
+                      'norm_line', 'norm_line_lo','norm_line_hi',
+                      'edgeE','edgeE_lo','edgeE_hi',
+                      'edgeTau','edgeTau_lo','edgeTau_hi',
+                      'line_sigma',
+                      'eqw','eqw_lo','eqw_hi']
         sp_data_pars=[model+'_'+par for par in sp_data_pars]
         for name,val in zip(sp_data_pars,sp_data):
             self.write_to_obs_info(self.spe_info_file,name,val)

@@ -135,7 +135,7 @@ if input('start  calculation from the beginning?')=='y':
         print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
         try:
             xte_obs=ObservationXTE(ObsID)
-            xte_obs.fit_std2_spe(model='cutoffpl_edge',error=0)
+            xte_obs.fit_std2_spe(model='edge_cutoffpl',error=0)
 
         except Exception as e:
             print(e)
@@ -147,6 +147,68 @@ for e,m in zip(err,msg):
 
 errors_spe_fit=err
 msg_spe_fit=msg
+
+
+
+
+
+
+#%% fit spectra with model cutoffpl 3-12 keV with  ionized edge
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='ionize_edge_cutoffpl',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
+
+
+
+
+#%% fit spectra with model cutoffpl 3-12 keV without gauss
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='no_gauss_cutoffpl',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
 
 
 
@@ -352,7 +414,7 @@ msg_make_spe=msg
 ObsList_TOP=['90089-11-04-04','90089-11-04-03','90089-11-04-02G','90089-11-04-01',
              '90089-11-04-00G','90089-11-03-05','90089-11-03-04','90089-11-03-03']
 
-
+my_ph_res_model='cutoffpl_no_gauss'
 err=[]
 msg=[]
 if input('start  calculation from the beginning?')=='y':
@@ -362,7 +424,9 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
             xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
 
 
         except Exception as e:
@@ -390,8 +454,10 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
-            #xte_obs.ph_res_results()
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
 
         except Exception as e:
             print(e)
@@ -433,8 +499,10 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=12)
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
             xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
-            #xte_obs.ph_res_results()
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
 
         except Exception as e:
             print(e)
@@ -529,7 +597,11 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
+
             #xte_obs.ph_res_results()
 
         except Exception as e:
@@ -582,8 +654,10 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=8)
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
             xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
-            #xte_obs.ph_res_results()
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
 
         except Exception as e:
             print(e)
