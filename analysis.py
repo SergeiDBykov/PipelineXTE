@@ -38,6 +38,16 @@ sns.set(style='ticks', palette='deep',context='notebook',rc={"xtick.top" : True,
 
 plt.ion()
 
+def align_yaxis(ax1, v1, ax2, v2):
+    """adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1"""
+    _, y1 = ax1.transData.transform((0, v1))
+    _, y2 = ax2.transData.transform((0, v2))
+    inv = ax2.transData.inverted()
+    _, dy = inv.transform((0, 0)) - inv.transform((0, y1-y2))
+    miny, maxy = ax2.get_ylim()
+    ax2.set_ylim(miny+dy, maxy+dy)
+
+
 def vals_and_errors(ObsParams,name,funct=lambda x: x):
     if isinstance(ObsParams,pd.core.frame.DataFrame):
         par,Min,Max=funct(ObsParams[name].values),funct(ObsParams[name+'_lo'].values),funct(ObsParams[name+'_hi'].values)
@@ -66,7 +76,7 @@ def vals_and_errors(ObsParams,name,funct=lambda x: x):
 savepath='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/'
 results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
 
-filename='standard_pipeline' #standard_pipeline_small_width standard_pipeline
+filename='standard_pipeline_with_phabs' #standard_pipeline standard_pipeline_edge_en_free
 ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
 ObsParams=ObsParams.sort_values('MJD_START')
 
@@ -77,14 +87,7 @@ ObsParams.period_orb_corr_err= ObsParams.period_orb_corr_err.replace(to_replace=
 ObsParams.loc[ObsParams.fasebin_cfg=='se','config']='E\_125us\_64M\_0\_1s'
 ObsParams.loc[ObsParams.fasebin_cfg=='sa','config']='B\_16ms\_46M\_0\_49\_H'
 ObsParams.loc[ObsParams.fasebin_cfg=='None','config']='-'
-#ObsParams[ObsParams.fasebin_cfg=='se']['config']='E\_125us\_64M\_0\_1s'
-#ObsParams['config']='E\_125us\_64M\_0\_1s' if ObsParams.fasebin_cfg=='se'
-#B\_16ms\_46M\_0\_49\_H
 
-
-
-
-#ObsParams=ObsParams[~ObsParams.ObsID.isin(ignored_obs)]
 
 STOP
 
@@ -94,25 +97,26 @@ STOP
 time=ObsParams.MJD_START
 
 for par in ['norm_line',
-            'eqw','eline',
+            'eqw',
             'edgeTau']:
 
     fig,ax=plt.subplots(figsize=(9,6))
 
-    for model,color in zip(['cutoffpl','edge_cutoffpl'],['k','r']):
+    for model,color in zip(['cutoffpl','edge_cutoffpl','phabs_cutoffpl','absorb_edge_cutoffpl'],['k','r','m','g']):
 
         if model=='cutofpl' and par=='edgeTau':
             1
         else:
             par_val,par_err=vals_and_errors(ObsParams,model+'_'+par,lambda x: x)
             ecol='k'
-            ax.plot(time,par_val,marker='d',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_eqw',alpha=0.6)
+            ax.plot(time,par_val,marker='d',mfc=color,mec=ecol,mew=1,ls='None',label=model+'_'+par,alpha=0.6)
             ax.errorbar(time,par_val,par_err,ecolor=ecol,fmt='none',alpha=0.5)
-            ax.set_ylim(0.95*min(par_val),1.1*max(par_val))
+            ax.set_ylim(0.85*min(par_val),1.2*max(par_val))
     ax.set_ylabel(par)
     ax.set_xlabel('Time, MJD')
+    ax.legend()
     ax.grid()
-    fig.savefig(savepath+f'{par}_{model}.png')
+    fig.savefig(savepath+f'{par}.png')
 
 
 #%% compare lines energies
@@ -147,8 +151,8 @@ plt.savefig(savepath+f'chi2_hist.png',dpi=250)
 
 #%% plot cutoffpl residuals no gauss - finding K-edge
 
-def plot_cutoffpl_ratio(ObsIDs,ax=None):
-    model='no_gauss_cutoffpl'
+def plot_cutoffpl_ratio_phabs(ObsIDs,ax=None):
+    model='phabs_cutoffpl_no_gauss'
     if ax==None:
         fig,ax = plt.subplots(figsize=(8, 6))
     else:
@@ -156,7 +160,33 @@ def plot_cutoffpl_ratio(ObsIDs,ax=None):
 
     for ObsID in ObsIDs:
 
-        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/{model}/no_gauss_ra.dat')
+        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/{model}/mean_spe_rat.dat')
+
+
+        label=f"Obs {ObsID}"
+
+        ax.errorbar(data1[0],data1[1],data1[2],data1[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
+    ax.set_xscale('log')
+
+    ax.legend(loc='upper left',fontsize=8)
+    ax.grid('y')
+    ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
+    ax.set_ylabel('data / best fit phabs*cutoffpl ',fontsize=8)
+    ax.set_xlabel('Energy, keV')
+    plt.savefig(savepath+f'cutoffpl_ratio_phabs.png',dpi=250)
+
+
+
+def plot_cutoffpl_ratio_no_phabs(ObsIDs,ax=None):
+    model='cutoffpl_no_gauss'
+    if ax==None:
+        fig,ax = plt.subplots(figsize=(8, 6))
+    else:
+        pass
+
+    for ObsID in ObsIDs:
+
+        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/{model}/mean_spe_rat.dat')
 
 
         label=f"Obs {ObsID}"
@@ -169,15 +199,17 @@ def plot_cutoffpl_ratio(ObsIDs,ax=None):
     ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
     ax.set_ylabel('data / best fit cutoffpl ',fontsize=8)
     ax.set_xlabel('Energy, keV')
-    plt.savefig(savepath+f'cutoffpl_ratio.png',dpi=250)
-
-
-plot_cutoffpl_ratio(['90089-11-02-03','90089-11-03-01G','90089-22-01-01G','90014-01-05-04'])
+    plt.savefig(savepath+f'cutoffpl_ratio_no_phabs.png',dpi=250)
 
 
 
+plot_cutoffpl_ratio_phabs(['90089-11-02-03','90089-11-03-01G','90089-22-01-01G','90014-01-05-04'])
+plot_cutoffpl_ratio_no_phabs(['90089-11-02-03','90089-11-03-01G','90089-22-01-01G','90014-01-05-04'])
 
-#%% plot residuals after gauss and edge
+
+
+
+#%% plot residuals after gauss and edge no phabs
 
 fig = plt.figure(figsize=(6.6, 6.6))
 plt.subplots_adjust(hspace=0)
@@ -189,7 +221,7 @@ ax_del1 = plt.subplot2grid((rows,cols), (2, 0), rowspan=1, colspan=3,sharex=ax_e
 ax_del2=plt.subplot2grid((rows,cols), (3, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
 #ax_del3=plt.subplot2grid((rows,cols), (4, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
 
-for ObsID,color in zip(['90089-11-03-01G','90089-22-01-01G','90427-01-03-06'],['k','b','g']):
+for ObsID,color in zip(['90089-11-05-08G','90089-11-04-02G'],['k','b']):
         label=ObsID
         eeufs=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl/mean_spe_eeufs.dat')
         ax_eeufs.errorbar(eeufs[0],eeufs[1],eeufs[2],eeufs[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
@@ -209,7 +241,100 @@ ax_del2.grid('y')
 ax_del2.set_xlabel('Energy, keV')
 ax_eeufs.set_xscale('log')
 
+plt.savefig(savepath+f'edge_residuals.png',dpi=250)
 
+
+
+
+#%% plot residuals after gauss and edge with phabs
+
+fig = plt.figure(figsize=(6.6, 6.6))
+plt.subplots_adjust(hspace=0)
+rows=4
+cols=3
+
+ax_eeufs=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+ax_del1 = plt.subplot2grid((rows,cols), (2, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+ax_del2=plt.subplot2grid((rows,cols), (3, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+#ax_del3=plt.subplot2grid((rows,cols), (4, 0), rowspan=1, colspan=3,sharex=ax_eeufs)
+
+for ObsID,color in zip(['90089-11-05-08G','90089-11-04-02G'],['k','b']):
+        label=ObsID
+        eeufs=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl/mean_spe_eeufs.dat')
+        ax_eeufs.errorbar(eeufs[0],eeufs[1],eeufs[2],eeufs[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/phabs_cutoffpl/mean_spe_del.dat')
+        ax_del1.errorbar(del1[0],del1[1],del1[2],del1[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del2=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/absorb_edge_cutoffpl/mean_spe_del.dat')
+        ax_del2.errorbar(del2[0],del2[1],del2[2],del2[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+ax_eeufs.legend()
+ax_eeufs.set_ylabel('Ph/cm/s/keV')
+ax_del1.set_ylabel('Sigma \n (cutoffpl+gauss) * phabs')
+ax_del1.grid('y')
+ax_del2.set_ylabel('Sigma \n (cutoffpl*edge+gauss)*phabs')
+ax_del2.grid('y')
+ax_del2.set_xlabel('Energy, keV')
+ax_eeufs.set_xscale('log')
+
+plt.savefig(savepath+f'edge_residuals_phabs.png',dpi=250)
+
+
+
+
+
+#%% plot dip decline factor for iron
+
+fig,ax=plt.subplots(figsize=(9,6))
+
+
+time=ObsParams.MJD_START
+
+par_val,par_err=ObsParams.cutoffpl_en_fix_rel_dip_iron.values,ObsParams.cutoffpl_en_fix_rel_dip_iron_err.values
+ecol='k'
+color='red'
+ax.plot(time[:-1],par_val[:-1],marker='d',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6)
+ax.errorbar(time[:-1],par_val[:-1],par_err[:-1],ecolor=ecol,fmt='none',alpha=0.5)
+ax.set_ylim(0.5,4)
+ax.set_ylabel('I_max/I_min (Iron)')
+ax.set_xlabel('Time, MJD')
+ax.grid()
+#fig.savefig(savepath+f'{par}.png')
+
+
+
+#%% plot dip decline factor for flux
+
+fig,ax=plt.subplots(figsize=(9,6))
+
+
+time=ObsParams.MJD_START
+
+par_val,par_err=ObsParams.cutoffpl_en_fix_rel_dip_flux.values,ObsParams.cutoffpl_en_fix_rel_dip_flux_err.values
+time=time[~np.isnan(par_val)]
+par_err=par_err[~np.isnan(par_val)]
+par_val=par_val[~np.isnan(par_val)]
+ecol='k'
+color='red'
+ax.plot(time,par_val,marker='d',mfc=color,mec=ecol,mew=1,ls='None',alpha=0.6)
+ax.errorbar(time,par_val,par_err,ecolor=ecol,fmt='none',alpha=0.5)
+ax.set_ylim(0.85*min(par_val),1.2*max(par_val))
+ax.set_ylabel('F_Max/F_min')
+ax.set_xlabel('Time, MJD')
+#ax.grid()
+#fig.savefig(savepath+f'{par}.png')
+
+time=ObsParams.MJD_START
+ax_twinx=ax.twinx()
+par_val,par_err=vals_and_errors(ObsParams,'edge_cutoffpl'+'_'+'edgeTau',lambda x: x)
+ecol='k'
+ax_twinx.plot(time,par_val,marker='d',mfc='g',mec=ecol,mew=1,ls='None',alpha=0.6)
+ax_twinx.errorbar(time,par_val,par_err,ecolor=ecol,fmt='none',alpha=0.5)
+#ax_twinx.set_ylim(-0.001,0.1)
+ax_twinx.set_ylabel('Edge_tau')
+align_yaxis(ax, 1.15, ax_twinx, 0)
+fig.savefig(savepath+f'edge_vs_dip.png')
 
 
 
@@ -678,14 +803,14 @@ plt.show()
 from Misc.TeX_Tables import pandas_to_tex
 from Misc.TeX_Tables.pandas_to_tex import *
 
-model='cutoffpl_'
+model='edge_cutoffpl_'
 def tex_tbl():
     null=lambda x: x
     free_columns=['ObsID','MJD_START','EXPOSURE','config',model+'chi2']
     free_columns_functions=[null,null,null,null,null]
     free_columns_formats=[0,1,0,0,2]
 
-    err_columns=['eqw','tot_flux',
+    err_columns=['eqw','cutoffpl_flux',
                  ]
     err_functions=[lambda x: 1000*x, lambda x: x/1e-9,
                    ]

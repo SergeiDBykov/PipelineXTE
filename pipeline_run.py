@@ -22,6 +22,7 @@ from Misc.doppler_correction import correct_times
 from subprocess import call
 from scipy.optimize import  curve_fit
 from PipelineXTE.pipeline_core import ObservationXTE
+from pipeline_core import ObsList_SA,ObsList_SE,ObsList_all
 
 plt.ioff()
 
@@ -122,6 +123,33 @@ msg_spe_fit=msg
 
 
 
+#%% fit spectra with model cutoffpl and phabs 3-12 keV
+
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='phabs_cutoffpl',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
+
+
 #%% fit spectra with model cutoffpl 3-12 keV with  edge
 
 do_not_start_this_chunk
@@ -148,6 +176,34 @@ for e,m in zip(err,msg):
 errors_spe_fit=err
 msg_spe_fit=msg
 
+
+
+
+#%% fit spectra with model cutoffpl 3-12 keV with  edge and phabs
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='absorb_edge_cutoffpl',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
 
 
 
@@ -183,7 +239,7 @@ msg_spe_fit=msg
 
 
 
-#%% fit spectra with model cutoffpl 3-12 keV without gauss
+#%% fit spectra with model cutoffpl 3-12 keV without gauss with phabs
 
 do_not_start_this_chunk
 
@@ -196,7 +252,7 @@ if input('start  calculation from the beginning?')=='y':
         print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
         try:
             xte_obs=ObservationXTE(ObsID)
-            xte_obs.fit_std2_spe(model='no_gauss_cutoffpl',error=0)
+            xte_obs.fit_std2_spe(model='phabs_cutoffpl_no_gauss',error=0)
 
         except Exception as e:
             print(e)
@@ -208,6 +264,37 @@ for e,m in zip(err,msg):
 
 errors_spe_fit=err
 msg_spe_fit=msg
+
+
+
+
+
+#%% fit spectra with model cutoffpl 3-12 keV without gauss without phabs
+
+do_not_start_this_chunk
+
+err=[]
+msg=[]
+if input('start  calculation from the beginning?')=='y':
+    os.chdir(RXTE_path+'/data/AO9')
+    ObsList=glob('*')
+    for k,ObsID in enumerate(ObsList):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            xte_obs.fit_std2_spe(model='cutoffpl_no_gauss',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+errors_spe_fit=err
+msg_spe_fit=msg
+
 
 
 
@@ -294,7 +381,7 @@ if input('start  calculation from the beginning?')=='y':
 for e,m in zip(err,msg):
     print(e,m)
 
-name='standard_pipeline' #standard_pipeline_small_width standard_pipeline
+name='standard_pipeline_with_phabs' #standard_pipeline_small_width standard_pipeline
 pd.to_pickle(ObsParams,f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.pkl')
 ObsParams.to_csv(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.csv',index=0)
 
@@ -410,6 +497,56 @@ msg_make_spe=msg
 
 
 
+#%% fits fasebin spectra - all (cutoffpl)
+err=[]
+msg=[]
+
+if input('start  calculation from the beginning?')=='y':
+    for k,ObsID in enumerate(ObsList_SA+ObsList_SE):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList_SA+ObsList_SE))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            #xte_obs.make_fasebin(nph=16)
+            xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+err_make_fb=err
+msg_make_fb=msg
+
+#%% fits fasebin spectra - SA (edge cutoffpl)
+if input('start  calculation from the beginning?')=='y':
+    for k,ObsID in enumerate(ObsList_SA):
+        print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList_SA))))
+        try:
+            xte_obs=ObservationXTE(ObsID)
+            #xte_obs.make_fasebin(nph=16)
+            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            #xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
+
+        except Exception as e:
+            print(e)
+            print('ERROR OCCURED WITH', ObsID)
+            err.append(ObsID)
+            msg.append(e)
+for e,m in zip(err,msg):
+    print(e,m)
+
+err_make_fb=err
+msg_make_fb=msg
+
+
+
+
 #%% SE fasebin - top of a flare:
 ObsList_TOP=['90089-11-04-04','90089-11-04-03','90089-11-04-02G','90089-11-04-01',
              '90089-11-04-00G','90089-11-03-05','90089-11-03-04','90089-11-03-03']
@@ -424,7 +561,7 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
             xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
             #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
 
