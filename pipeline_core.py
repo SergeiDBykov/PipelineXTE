@@ -806,7 +806,7 @@ class ObservationXTE():
         else:
             os.system(f'mkdir -p {model}')
 
-        os.system(f'xspec - {xspec_scripts_path}{model}.txt')
+        os.system(f'xspec - {xspec_scripts_path}mean_spe/{model}.txt')
 
         os.chdir(model)
         #write spectral data to obs_info
@@ -1037,7 +1037,7 @@ class ObservationXTE():
                   #line = line.replace('45658',mjd_start)
                   #line = line.replace('57346',mjd_stop)
                   line=line.replace('2.2 P','0.0 P')
-                  #line = line.replace('53360.000000000',mjd_start)
+                  line = line.replace('53360.000000000',mjd_start)
                   #line = line.replace('2.2','0.0')
                   print(line)
             else:
