@@ -45,11 +45,28 @@ def fit_const_chi_square(data,error):
 
 
 plt.ioff()
+
+
 import seaborn as sns
-sns.set(style='ticks', palette='deep',context='notebook')
+from matplotlib import rc
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+#rc('text', usetex=True)
+sns.set(style='ticks', palette='deep',context='notebook',rc={"xtick.top" : True,"ytick.right":True,
+                                                                    'xtick.direction':'in','ytick.direction':'in',
+                                                                    'xtick.minor.visible':True,'ytick.minor.visible':True,
+                                                                    "ytick.major.width":2,"xtick.major.width":2,
+                                                                    "axes.linewidth":2,"lines.markersize":7,
+                                                                    "axes.grid":False,"grid.linestyle":'--',"axes.grid.which":'major',
+                                                                    "font.size":10, "axes.facecolor": "1",
+                                                                    "lines.markeredgecolor":'k',"lines.markersize":7,
+                                                                    "axes.formatter.limits":[-3,3],"axes.formatter.use_mathtext": True,
+                                                                    "axes.formatter.min_exponent":1,
+                                                                    "figure.figsize":[6.6, 6.6/2],"figure.autolayout":False,
+                                                                    "hist.bins":'auto',
+                                                                    "scatter.edgecolors":'k',
+                                                                    })
 
-
-
+#%%
 ObsList_all=['90089-11-01-00', '90089-11-01-02', '90089-11-01-03',
        '90089-11-01-04', '90089-11-02-00', '90089-11-02-05',
        '90089-11-02-06', '90089-11-02-01', '90089-11-02-02',

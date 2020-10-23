@@ -507,8 +507,8 @@ if input('start  calculation from the beginning?')=='y':
         try:
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
-            xte_obs.fit_ph_res(model='cutoffpl_no_gauss_phabs',error=0)
-            xte_obs.fit_ph_res(model='cutoffpl_en_fix_phabs',chmin=6,chmax=8,error=0.00)
+            xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+            xte_obs.fit_ph_res(model='cutoffpl',chmin=6,chmax=8,error=0.00)
             #xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix',error=0)
 
         except Exception as e:
@@ -530,8 +530,7 @@ if input('start  calculation from the beginning?')=='y':
             xte_obs=ObservationXTE(ObsID)
             #xte_obs.make_fasebin(nph=16)
             #xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
-            #xte_obs.fit_ph_res(model='cutoffpl_en_fix',chmin=6,chmax=8,error=0.00)
-            xte_obs.fit_ph_res(model='cutoffpl_en_fix_edge_fix_phabs',error=0)
+            xte_obs.fit_ph_res(model='cutoffpl_edge',error=0)
 
         except Exception as e:
             print(e)
