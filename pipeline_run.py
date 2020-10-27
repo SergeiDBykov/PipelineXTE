@@ -381,7 +381,7 @@ if input('start  calculation from the beginning?')=='y':
 for e,m in zip(err,msg):
     print(e,m)
 
-name='standard_pipeline_with_phabs' #standard_pipeline_small_width standard_pipeline
+name='standard_pipeline' #standard_pipeline_small_width standard_pipeline
 pd.to_pickle(ObsParams,f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.pkl')
 ObsParams.to_csv(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/{name}.csv',index=0)
 

@@ -172,6 +172,8 @@ def read_ph_res_results_data(ObsID,model,
         ObsID='90427-01-03-09'
     elif ObsID=='group_6':
         ObsID='90014-01-02-13'
+    elif ObsID=='group_7':
+        ObsID='90014-01-03-020'
     else:
         pass
     xte_obs=ObservationXTE(ObsID)
@@ -373,7 +375,7 @@ def plot_ph_res_results(ObsID='90089-11-03-01G',model='cutoffpl',roll=0,plot_evo
 
     #fig.tight_layout()
     plt.show()
-    return [fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]
+    return [fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]
 
 
 def plot_spe_ratio(ObsID,phase1,phase2,color='k',ax=None,po_pars=None):
@@ -505,6 +507,7 @@ def roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03
 
     all_cts=[]
     obs_cts=[]
+    obs_num_pcu_on=[]
     for ObsID,roll in zip(ObsList,Roll_list):
 
         os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin')
@@ -528,6 +531,8 @@ def roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03
         cts=fasebin_check[1].data['counts'].sum(axis=1)
         fasebin_check.close()
         all_cts.append(cts)
+
+        xte_obs=ObservationXTE(ObsID)
 
         # ax[1].plot(cts-np.mean(cts),'+-',label=f'{ObsID} - rolled')
         # ax[1].set_ylabel('counts-mean')
@@ -560,6 +565,9 @@ def roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03
     for ObsID in ObsList:
         os.system(f"cp /Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/response.rsp ./response_{ObsID}.rsp")
         os.system(f"cp /Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/fasebin_orig_roll.pha  ./fasebin_orig_roll_{ObsID}.pha")
+        os.system(f"cp /Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/dets.png  ./dets_{ObsID}.png")
+
+
 
     obs_cts=np.array(obs_cts)
     weights=obs_cts/obs_cts.sum()
@@ -716,13 +724,77 @@ error maximum 100 2.71 8
 
     fit
 
-flux 3 12
-    set cutoff312_mean [tcloutr flux ]
+
+
+
+    flux 3 12
+    tclout flux 1
+    set fluxx $xspec_tclout
+    set fluxx [lindex $fluxx 0]
+    set flux_init [expr {{log10($fluxx)}}]
+
+    freeze 3,6
+
+
+
+    add 2 cflux
+    3
+    12
+    -10
+
+
+
+    newpar 6 $flux_init
+    fit
+
+    error  6
+
+
+
+
+
+    ##############
+    ### FLUX CUTOFF 3-12
+    ##############
+    set parname cutoff312
+    set parind 6
+
+
+
+    #function for flux calculation for some component
+    tclout par $parind
+    set logF $xspec_tclout
+    set logF [lindex $logF 0]
+
+    set mean [expr {{pow(10,$logF)}}]
+
+    tclout error $parind
+    set logFerr $xspec_tclout
+
+    set lo [lindex $logFerr 0]
+    set lo [expr {{pow(10, $lo)}}]
+
+    set hi [lindex $logFerr 1]
+    set hi [expr {{pow(10,$hi)}}]
+
+    set err_lo [expr {{$mean-$lo}}]
+    set err_hi [expr {{$hi-$mean}}]
+
+    #for error propagation
+    set e${{parname}} [expr {{max($err_lo,$err_hi)}}]
+
+    #for puts in file
+    set ${{parname}}_mean $mean
+    set ${{parname}}_lo $lo
+    set ${{parname}}_hi $hi
+
+
+
 
 
     set fileid [open ./{dataname}_edge_all.dat a]
 
-    puts $fileid "0 0 $chi_r $dof   [lindex $cutoff312_mean 0]   [lindex $cutoff312_mean 0] [lindex $cutoff312_mean 0]  [lindex $po 0] [lindex $po_err 0] [lindex $po_err 1] [lindex $ecut 0] [lindex $ecut_err 0] [lindex $ecut_err 1] [lindex $norm_po 0] [lindex $norm_po_err 0] [lindex $norm_po_err 1] [lindex $eline 0] [lindex $eline_err 0] [lindex $eline_err 1] [lindex $norm_line 0] [lindex $norm_line_err 0] [lindex $norm_line_err 1] [lindex $edgeE 0] [lindex $edgeE_err 0] [lindex $edgeE_err 1] [lindex $edgeTau 0] [lindex $edgeTau_err 0] [lindex $edgeTau_err 1] [lindex $sigma 0] [lindex $eqw 0] [lindex $eqw 1] [lindex $eqw 2] 0 0.04"
+    puts $fileid "0 0 $chi_r $dof   [lindex $cutoff312_mean 0] [lindex $cutoff312_lo 0]  [lindex $cutoff312_hi 0]  [lindex $po 0] [lindex $po_err 0] [lindex $po_err 1] [lindex $ecut 0] [lindex $ecut_err 0] [lindex $ecut_err 1] [lindex $norm_po 0] [lindex $norm_po_err 0] [lindex $norm_po_err 1] [lindex $eline 0] [lindex $eline_err 0] [lindex $eline_err 1] [lindex $norm_line 0] [lindex $norm_line_err 0] [lindex $norm_line_err 1] [lindex $edgeE 0] [lindex $edgeE_err 0] [lindex $edgeE_err 1] [lindex $edgeTau 0] [lindex $edgeTau_err 0] [lindex $edgeTau_err 1] [lindex $sigma 0] [lindex $eqw 0] [lindex $eqw 1] [lindex $eqw 2] 0 0.04"
 
     close $fileid
 
@@ -1036,11 +1108,11 @@ def average_phase_bins_addspec(ObsID,indeces,
     return
 
 
-def add_average_analysis_on_plots(ObsID,folder,phases,names,colors,axes):
+def add_average_analysis_on_plots(ObsID,folder,phases,names,colors,axes,n_ph=16):
     for name,color,phase in zip(names,colors,phases):
         os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/{folder}')
-        phase=(np.array(phase)-1)/16
-        phase_err=len(phase)/(16)/2
+        phase=(np.array(phase)-1)/n_ph
+        phase_err=len(phase)/(n_ph)/2
         phase=np.mean(phase)
         data=np.genfromtxt(f'all_{name}_edge_all.dat')
         data=data.reshape(1,len(data))
@@ -1117,13 +1189,13 @@ def add_average_analysis_on_plots(ObsID,folder,phases,names,colors,axes):
 
 
         axes[0].errorbar(phase,edgeTau*1e2,edgeTau_err*1e2,phase_err,color=color,drawstyle='steps-mid',alpha=0.6,lw=4,uplims=uplim_ind)
-
         axes[1].errorbar(phase,eqw*1e3,eqw_err*1000,phase_err,color=color,drawstyle='steps-mid',alpha=0.6,lw=4)
 
         axes[2].errorbar(phase,norm_line*1e3,norm_line_err*1000,phase_err,color=color,drawstyle='steps-mid',alpha=0.6,lw=4)
 
+        axes[4].errorbar(phase,flux312/1e-8,flux312_err/1e-8,phase_err,color='gray',drawstyle='steps-mid',alpha=0.3,lw=2)
 
-    ax_ratio=axes[3]
+        ax_ratio=axes[3]
 
     data1=np.genfromtxt(f'all_dips_lda.dat')
 
@@ -1134,11 +1206,11 @@ def add_average_analysis_on_plots(ObsID,folder,phases,names,colors,axes):
         sigma=np.abs(f)*np.sqrt( (da/a)**2 + (db/b)**2  )
         return f, sigma
 
-    rat,delta=ratio_error(data1[1],data2[1],data1[2],data2[2])
-    energy=data1[0]
+    # rat,delta=ratio_error(data1[1],data2[1],data1[2],data2[2])
+    # energy=data1[0]
 
-    ax_ratio.errorbar(energy,rat,delta,data1[3],color='k',label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
-    ax_ratio.legend()
+    # ax_ratio.errorbar(energy,rat,delta,data1[3],color='k',label=label,drawstyle='steps-mid',ls=':',alpha=0.6)
+    # ax_ratio.legend()
 
 
 
@@ -1235,29 +1307,46 @@ msg_make_fb=msg
 
 
 
+#%% make 32 phase fasebin for group 1-4
+ObsList=['90089-11-03-02','90089-11-03-01G','90089-11-03-00G']+['90427-01-03-00','90427-01-03-01','90427-01-03-02']+['90427-01-03-14G','90014-01-02-00','90427-01-03-05']+['90427-01-03-06','90427-01-03-07','90014-01-02-08','90014-01-02-10']
+ObsList=['90427-01-03-06','90427-01-03-07','90014-01-02-08','90014-01-02-10']
 
-#%% for top-phase observations group 1
+for k,ObsID in enumerate(ObsList):
+    print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList_TOP))))
+    xte_obs=ObservationXTE(ObsID)
+    xte_obs.make_fasebin(nph=32)
+    xte_obs.fit_ph_res(model='cutoffpl_no_gauss',error=0)
+    xte_obs.fit_ph_res(model='cutoffpl',chmin=6,chmax=8,error=0.00)
+    xte_obs.fit_ph_res(model='cutoffpl_edge',error=0)
+
+    plot_ph_res_results(ObsID,'cutoffpl_edge')
+
+
+
+
+#%% for top-phase observations group 1,  32 bins
+
 groupid='group_1'
 
-# roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03-02'],Roll_list=[0,-5,-10],
-#                   folder_name='out'+groupid)
+#roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03-02'],Roll_list=[0,-10,-20],
+#                  folder_name='out'+groupid)
 # os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
-avg_bins_res=average_phase_bins_addspec(ObsID=groupid,
-                            indeces=[[2,3,4,5,10,11,12,13],[7,8,15,16]],
-                            names=['off_dip','dips'],
-                            colors=['b','r'],
-                            folder='average_phase_all_no_borders',
-                            )
+# avg_bins_res=average_phase_bins_addspec(ObsID=groupid,
+#                             indeces=[[1,2,3,4,5,6,7,8,9,10,11,17,18,19,20,21,22,23,24],[13,14,15,26,27,28,29,30,31,32]],
+#                             names=['off_dip','dips'],
+#                             colors=['b','r'],
+#                             folder='average_phase_all_no_borders',
+#                             )
 
 add_average_analysis_on_plots(groupid,'average_phase_all_no_borders',
-                              [[7,8],[15,16],[2,3,4,5],[10,11,12,13]],
+                              [[13,14,15],[26,27,28,29,30,31,32],[1,2,3,4,5,6,7,8,9,10,11],[17,18,19,20,21,22,23,24]],
                               ['dips','dips','off_dip','off_dip'],
-                              ['r','r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              ['r','r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold],n_ph=32)
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 # average_phase_bins_addspec(ObsID='90089-11-03-00G_group',
@@ -1269,7 +1358,38 @@ fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles
 
 
 
-#%% for decline phase observations: group 2
+#%% for top-phase observations group 1, 16 bins
+#groupid='group_1'
+
+# roll_fasebin_files(ObsList=['90089-11-03-00G','90089-11-03-01G','90089-11-03-02'],Roll_list=[0,-5,-10],
+#                   folder_name='out'+groupid)
+# os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+# [fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
+
+# avg_bins_res=average_phase_bins_addspec(ObsID=groupid,
+#                             indeces=[[2,3,4,5,10,11,12,13],[7,8,15,16]],
+#                             names=['off_dip','dips'],
+#                             colors=['b','r'],
+#                             folder='average_phase_all_no_borders',
+#                             )
+
+# add_average_analysis_on_plots(groupid,'average_phase_all_no_borders',
+#                               [[7,8],[15,16],[2,3,4,5],[10,11,12,13]],
+#                               ['dips','dips','off_dip','off_dip'],
+#                               ['r','r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
+# fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
+
+# average_phase_bins_addspec(ObsID='90089-11-03-00G_group',
+#                             indeces=[[2,10,11,12,13],[7,8,15,16]],
+#                             names=['humps','dips'],
+#                             colors=['b','r'],
+#                             folder='average_phase_all_no_borders_skip_badchi2')
+
+
+#%% for decline phase observations: group 2, 16 bins
 groupid='group_2'
 
 #roll_fasebin_files(ObsList=['90427-01-03-00','90427-01-03-01','90427-01-03-02'],Roll_list=[0,0,-8],
@@ -1279,7 +1399,7 @@ os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/f
 #os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
 #os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
 #os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
 
 
@@ -1291,66 +1411,158 @@ os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/f
 
 
 average_phase_bins_addspec(ObsID=groupid,
-                            indeces=[[1,2,3,4,5,6,7,8,9,10,11,16],[13,14]],
+                            indeces=[[1,2,3,4,5,6,7,8,9,10,11],[13,14,15]],
                             names=['off_dip','dips'],
                             colors=['b','r'],
                             folder='average_phase_all_one_dip_all_off_dip')
 
 add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
-                              [[13,14],[1,2,3,4,5,6,7,8,9,10,11],[16]],
-                              ['dips','off_dip','off_dip'],
-                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              [[13,14,15],[1,2,3,4,5,6,7,8,9,10,11]],
+                              ['dips','off_dip'],
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 
-#%% for decline phase observations: group 3
+
+#%% for decline phase observations: group 2, 32 bins
+
+groupid='group_2'
+
+roll_fasebin_files(ObsList=['90427-01-03-00','90427-01-03-01','90427-01-03-02'],Roll_list=[0,-1,-18],
+                  folder_name='out'+groupid)
+
+os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
+
+
+
+
+average_phase_bins_addspec(ObsID=groupid,
+                            indeces=[np.arange(1,21),np.arange(23,30)],
+                            names=['off_dip','dips'],
+                            colors=['b','r'],
+                            folder='average_phase_all_one_dip_all_off_dip')
+
+add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
+                              [np.arange(23,30),np.arange(1,21)],
+                              ['dips','off_dip'],
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold],n_ph=32)
+fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
+
+
+#%% for decline phase observations: group 3, 16 bins
 groupid='group_3'
-# roll_fasebin_files(ObsList=['90427-01-03-14G','90014-01-02-00','90427-01-03-05'],Roll_list=[0,-10,-12],
-#                   folder_name='out'+groupid)
+roll_fasebin_files(ObsList=['90427-01-03-14G','90014-01-02-00','90427-01-03-05'],Roll_list=[0,-20,-24],
+                  folder_name='out'+groupid)
+
+os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
+
+
+average_phase_bins_addspec(groupid,
+                            indeces=[[1,2,3,4,5,6,7,8],[10,11,12]],
+                            names=['off_dip','dips'],
+                            colors=['b','r'],
+                            folder='average_phase_all_one_dip_all_off_dip')
+
+add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
+                              [[10,11,12],[1,2,3,4,5,6,7,8]],
+                              ['dips','off_dip','off_dip'],
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
+fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
+
+
+
+
+
+#%% for decline phase observations: group 3, 32 bins
+groupid='group_3'
+#roll_fasebin_files(ObsList=['90427-01-03-14G','90014-01-02-00','90427-01-03-05'],Roll_list=[0,-20,-24],
+#                  folder_name='out'+groupid)
 
 # os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
 
 average_phase_bins_addspec(groupid,
-                            indeces=[[3,4,5,6,7,14],[9,10,11,12]],
+                            indeces=[np.arange(1,17),np.arange(18,26)],
                             names=['off_dip','dips'],
                             colors=['b','r'],
                             folder='average_phase_all_one_dip_all_off_dip')
 
 add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
-                              [[9,10,11,12],[3,4,5,6,7],[13,14]],
+                              [np.arange(18,26),np.arange(1,17)],
                               ['dips','off_dip','off_dip'],
-                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold],n_ph=32)
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 
-#%%for decline phase observations: group 4
+
+#%%for decline phase observations: group 4, 32 bins
+
+groupid='group_4'
+
+#roll_fasebin_files(ObsList=['90427-01-03-06','90427-01-03-07','90014-01-02-08'],
+#                    Roll_list=[0,-15,-17,],folder_name='out'+groupid)
+
+
+os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
+
+
+average_phase_bins_addspec(groupid,
+                            indeces=[np.arange(12,32),np.arange(1,10)],
+                            names=['off_dip','dips'],
+                            colors=['b','r'],
+                            folder='average_phase_all_one_dip_all_off_dip')
+
+add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
+                              [np.arange(1,10),np.arange(12,32)],
+                              ['dips','off_dip','off_dip'],
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold],n_ph=32)
+fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
+
+
+
+#%%for decline phase observations: group 4, 16 bins
 
 groupid='group_4'
 #roll_fasebin_files(ObsList=['90427-01-03-06','90427-01-03-07','90014-01-02-08','90014-01-02-10'],
-#                    Roll_list=[0,-7,-8,-5],folder_name='out'+groupid)
+#                    Roll_list=[0,-7,-8,-4],folder_name='out'+groupid)
 
-# os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
-# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
-# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
-# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+#roll_fasebin_files(ObsList=['90427-01-03-06','90427-01-03-07','90014-01-02-08'],
+#                    Roll_list=[0,-7,-8,],folder_name='out'+groupid)
+
+
+os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+#os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+#os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+#os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
 
 average_phase_bins_addspec(groupid,
-                            indeces=[[5,6,11,12,13,14,15],[1,2,3]],
+                            indeces=[[6,7,8,9,10,11,12,13,14,15],[2,3,4]],
                             names=['off_dip','dips'],
                             colors=['b','r'],
                             folder='average_phase_all_one_dip_all_off_dip')
 
 add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
-                              [[1,2,3],[11,12,13,14,15],[5,6]],
+                              [[2,3,4],[6,7,8,9,10,11,12,13,14,15]],
                               ['dips','off_dip','off_dip'],
-                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 
@@ -1362,26 +1574,26 @@ fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles
 #%%for decline phase observations: group 5
 
 groupid='group_5'
-# roll_fasebin_files(ObsList=['90427-01-03-09','90427-01-03-11','90427-01-03-12','90014-01-02-15'],
+# roll_fasebin_files(ObsList=['90427-01-03-09','90427-01-03-11','90427-01-03-12'],
 #                     Roll_list=[0,-11,-6,-4],folder_name='out'+groupid)
 
 # os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
 
 average_phase_bins_addspec(groupid,
-                            indeces=[[5,6,7,8],[10,11,12,13]],
+                            indeces=[[1,2,3,4,5,6,7,8,9],[11,12,13,14]],
                             names=['off_dip','dips'],
                             colors=['b','r'],
                             folder='average_phase_all_one_dip_all_off_dip')
 
 add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
-                              [[10,11,12,13],[5,6,7,8]],
+                              [[11,12,13,14],[1,2,3,4,5,6,7,8,9]],
                               ['dips','off_dip'],
-                              ['r','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              ['r','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 
@@ -1399,30 +1611,59 @@ fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles
 
 
 groupid='group_6'
-# roll_fasebin_files(ObsList=['90014-01-03-00','90014-01-03-01','90014-01-03-020','90014-01-03-03','90014-01-02-13','90014-01-03-02'],Roll_list=[0,-14,-14,-2,-12,-3],folder_name='out'+groupid)
+# roll_fasebin_files(ObsList=['90014-01-02-13','90014-01-03-00','90014-01-03-01'],Roll_list=[0,-4,-2],folder_name='out'+groupid)
 
 # os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
 # os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
-[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1]=plot_ph_res_results(groupid,'cutoffpl_edge')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
 
 
 
 
 average_phase_bins_addspec(groupid,
-                            indeces=[[1,2,3,4,5,6,7,8],[10,11,12,13]],
+                            indeces=[[10,11,12,13,14,15,16],[5,6,7,8]],
                             names=['off_dip','dips'],
                             colors=['b','r'],
                             folder='average_phase_all_one_dip_all_off_dip')
 
 add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
-                              [[10,11,12,13],[1,2,3,4,5,6,7,8]],
+                              [[5,6,7,8],[10,11,12,13,14,15,16]],
                               ['dips','off_dip'],
-                              ['r','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1])
+                              ['r','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
 
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 
+
+
+
+
+#%% for decline phase observations: group 7
+groupid='group_7'
+# roll_fasebin_files(ObsList=['90014-01-03-020','90014-01-03-02','90014-01-03-03'],Roll_list=[0,-5,-4],folder_name='out'+groupid)
+
+# os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{groupid}/products/fasebin')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_no_gauss.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl.txt ')
+# os.system(f'xspec -  ~/work/xray_pulsars/rxte/python_pca_pipeline/xspec_scripts/ph_res/ph_res_cutoffpl_edge.txt ')
+[fig,ax_norm,ax_eqw,ax_edgeTau,ax_chi2,ax_ratio_1,ax_efold]=plot_ph_res_results(groupid,'cutoffpl_edge')
+
+
+
+
+average_phase_bins_addspec(groupid,
+                            indeces=[[1,2,3,4,5,6,12,13,14,15,16],[8,9,10]],
+                            names=['off_dip','dips'],
+                            colors=['b','r'],
+                            folder='average_phase_all_one_dip_all_off_dip')
+
+add_average_analysis_on_plots(groupid,'average_phase_all_one_dip_all_off_dip',
+                              [[8,9,10],[1,2,3,4,5,6],[12,13,14,15,16]],
+                              ['dips','off_dip','off_dip'],
+                              ['r','b','b'], [ax_edgeTau,ax_eqw,ax_norm,ax_ratio_1,ax_efold])
+
+fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/groups/'+f'{groupid}_cutoffpl_edge_average_phases_with_results.png',dpi=100)
 
 

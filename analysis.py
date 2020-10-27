@@ -76,7 +76,7 @@ def vals_and_errors(ObsParams,name,funct=lambda x: x):
 savepath='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/'
 results_path='/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pandas_data/'
 
-filename='standard_pipeline_with_phabs' #standard_pipeline standard_pipeline_edge_en_free
+filename='standard_pipeline' #standard_pipeline standard_pipeline_edge_en_free standard_pipeline_with_phabs
 ObsParams=pd.read_pickle(results_path+f'{filename}.pkl')
 ObsParams=ObsParams.sort_values('MJD_START')
 
@@ -102,7 +102,7 @@ for par in ['norm_line',
 
     fig,ax=plt.subplots(figsize=(9,6))
 
-    for model,color in zip(['cutoffpl','edge_cutoffpl','phabs_cutoffpl','absorb_edge_cutoffpl'],['k','r','m','g']):
+    for model,color in zip(['cutoffpl','edge_cutoffpl',],['k','r','m','g']):
 
         if model=='cutofpl' and par=='edgeTau':
             1
@@ -469,7 +469,7 @@ fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=(6,6))
 
 time=ObsParams.MJD_START
 
-eqw,eqw_err=vals_and_errors(ObsParams,'cutoffpl_eqw',funct=lambda x: 1e3*x)
+eqw,eqw_err=vals_and_errors(ObsParams,'edge_cutoffpl_eqw',funct=lambda x: 1e3*x)
 ax.errorbar(time,eqw,eqw_err,fmt='.',color='c',marker='s',ms=4,alpha=0.8)
 
 ax.set_ylabel('Iron line equivalent width \n eV',color='k')

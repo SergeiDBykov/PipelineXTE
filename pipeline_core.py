@@ -836,7 +836,7 @@ class ObservationXTE():
                       'edgeE','edgeE_lo','edgeE_hi',
                       'edgeTau','edgeTau_lo','edgeTau_hi',
                       'line_sigma',
-                      'eqw','eqw_lo','eqw_hi','nh']
+                      'eqw','eqw_lo','eqw_hi','nh','sys_err']
         sp_data_pars=[model+'_'+par for par in sp_data_pars]
         for name,val in zip(sp_data_pars,sp_data):
             self.write_to_obs_info(self.spe_info_file,name,val)
