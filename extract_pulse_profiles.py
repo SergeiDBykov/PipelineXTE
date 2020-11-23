@@ -121,35 +121,84 @@ make_light_curves('90089-11-03-02',binsize='0.02')
 make_light_curves('90427-01-03-00',binsize='0.02')
 
 
-#%% run loop
-binsize='0.02'
-
-err=[]
-msg=[]
-for k,ObsID in enumerate(ObsList_top):
-    print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
-    try:
-        os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
-
-        make_light_curves(ObsID,binsize=binsize)
-        os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/sa_data_lc_{binsize}sec')
-        #make_ccf(second_name='iron_band_1',binsize=binsize)
-        #make_ccf(second_name='iron_band_2',binsize=binsize)
-
-        read_and_plot_ccf(ObsID,second_name='iron_band_1',binsize=binsize)
-        read_and_plot_ccf(ObsID,second_name='iron_band_2',binsize=binsize)
 
 
 
-    except Exception as e:
-        print(e)
-        print('ERROR OCCURED WITH', ObsID)
-        err.append(ObsID)
-        msg.append(e)
-for e,m in zip(err,msg):
-    print(e,m)
+#%% make pulses in different bands
 
-err_make_fb=err
-msg_make_fb=msg
+def make_light_curves_for_energy(ObsID='90427-01-03-00',binsize='0.1'):
+    os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
+    create_dir(f'products/sa_data_lc_{binsize}sec')
+    xte_obs=ObservationXTE(ObsID)
+    if ObsID in ObsList_top:
+        gen_lc(ch_rel='3_17',ch_abs='8-29',outname='soft_band_5_12_keV',binsize=binsize)
+        gen_lc(ch_rel='18_25',ch_abs='30-46',outname='hard_band_12_20_keV',binsize=binsize)
+        gen_lc(ch_rel='26_43',ch_abs='46-116',outname='vhard_band_20_50_keV',binsize=binsize)
+        gen_lc(ch_rel='44-63',ch_abs='117-249',outname='vvhard_band_50_110_keV',binsize=binsize)
+
+    elif ObsID in ObsList_decay:
+        gen_lc(ch_rel='4_25',ch_abs='8-29',outname='soft_band_5_12_keV',binsize=binsize)
+        gen_lc(ch_rel='25_45',ch_abs='29-49',outname='hard_band_12_20_keV',binsize=binsize)
+
+
+    os.chdir(f'products/sa_data_lc_{binsize}sec')
+
+    orbitfile=glob(xte_obs._orbit_path_+'/*')
+    if len(orbitfile)==1:
+        orbitfile=orbitfile[0]
+    else:
+        raise Exception('more than one orbit files found!!!')
+
+
+    for lcname in glob('*lc'):
+        #bcorr=f"barycorr infile={lcname} outfile={lcname}_bary orbitfiles={orbitfile} \n"
+        #run_command(bcorr,out_path='./',dull=0)
+        #print(bcorr)
+        #os.system(bcorr)
+        faxbary=f'faxbary infile={lcname} outfile={lcname}_bary orbitfiles={orbitfile} ra=5.37500000E+01  dec=5.31730003E+01 barytime=no'
+        os.system(faxbary)
+
+    import Misc
+    for channel in glob('*lc_bary'):
+        correct_times(f'{channel}',Misc.doppler_correction.orb_params_v0332)
+
+
+make_light_curves_for_energy(ObsID='90427-01-03-00')
+make_light_curves_for_energy(ObsID='90089-11-03-01G')
+
+
+
+#%% old stuff
+
+# #%% run loop
+# binsize='0.02'
+
+# err=[]
+# msg=[]
+# for k,ObsID in enumerate(ObsList_top):
+#     print(' =============== Obs {0} out of {1} ================'.format(str(k+1),str(len(ObsList))))
+#     try:
+#         os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}')
+
+#         make_light_curves(ObsID,binsize=binsize)
+#         os.chdir(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/sa_data_lc_{binsize}sec')
+#         #make_ccf(second_name='iron_band_1',binsize=binsize)
+#         #make_ccf(second_name='iron_band_2',binsize=binsize)
+
+#         read_and_plot_ccf(ObsID,second_name='iron_band_1',binsize=binsize)
+#         read_and_plot_ccf(ObsID,second_name='iron_band_2',binsize=binsize)
+
+
+
+#     except Exception as e:
+#         print(e)
+#         print('ERROR OCCURED WITH', ObsID)
+#         err.append(ObsID)
+#         msg.append(e)
+# for e,m in zip(err,msg):
+#     print(e,m)
+
+# err_make_fb=err
+# msg_make_fb=msg
 
 

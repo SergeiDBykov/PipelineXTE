@@ -1023,7 +1023,7 @@ class ObservationXTE():
 
 
         fasebin_path=os.getcwd()
-        for filename in ['/fasebin.sh','/psrtime.dat','/fasebin.pha','/fasebin.dat','/maketime_file.fits','/'+datafiles,'cutoffpl.xcm','ph_res.dat']:
+        for filename in ['/fasebin.sh','/psrtime.dat','/fasebin.pha','/fasebin_sys.pha','/fasebin.dat','/maketime_file.fits','/'+datafiles,'cutoffpl.xcm','ph_res.dat']:
             if os.path.exists(fasebin_path+filename):
                 os.remove(fasebin_path+filename)
 
@@ -1114,7 +1114,7 @@ class ObservationXTE():
                 ff.close()
             os.system('mv fasebin_tmp.pha fasebin_sys.pha')
 
-        apply_systematic_error_fasebin(error=error,chmin=chmin+1,chmax=chmax)
+        #apply_systematic_error_fasebin(error=error,chmin=chmin+1,chmax=chmax)
 
 
         conf=glob('*.xdf')[0][0:2]

@@ -25,7 +25,7 @@ from Misc import  doppler_correction as doppler
 from Misc.doppler_correction import  day2sec
 
 
-matplotlib.rcParams['figure.figsize'] = 6.6, 6.6/2
+matplotlib.rcParams['figure.figsize'] = 6.6, 6.6
 matplotlib.rcParams['figure.subplot.left']=0.10
 matplotlib.rcParams['figure.subplot.bottom']=0.15
 matplotlib.rcParams['figure.subplot.right']=0.9
@@ -82,7 +82,7 @@ ObsParams.period_orb_corr= ObsParams.period_orb_corr.replace(to_replace='None',v
 ObsParams.period_orb_corr_err= ObsParams.period_orb_corr_err.replace(to_replace='None',value=np.nan)
 
 
-ObsParams.loc[ObsParams.fasebin_cfg=='se','config']='E\_125us\_64M\_0\_1s'
+ObsParams.loc[ObsParams.fasebin_cfg=='se','config']='-'
 ObsParams.loc[ObsParams.fasebin_cfg=='sa','config']='B\_16ms\_46M\_0\_49\_H'
 ObsParams.loc[ObsParams.fasebin_cfg=='None','config']='-'
 
@@ -153,15 +153,15 @@ for model in ['edge_cutoffpl','cutoffpl']:
     ax_iron=ax.twinx()
     flux_iron,flux_err_iron=vals_and_errors(ObsParams,model+'_norm_line',funct=lambda x: x/1e-3)
 
-    ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',color='g',marker='o',ms=4,alpha=0.6,zorder=-1)
+    ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',color='g',marker='s',ms=4,alpha=0.6,zorder=-1)
 
 
-    ax_iron.set_ylabel('Iron line norm, \n $10^{3}$ ph $cm^{-2}$ $s^{-1}$',color='g')
+    ax_iron.set_ylabel('Iron line norm, \n $10^{-3}$ ph $cm^{-2}$ $s^{-1}$',color='g')
     ax_iron.set_yscale('log')
 
 
-    ax.axvspan(53340.29-MJD_REF,53360.00-MJD_REF,alpha=0.05, color='gray')
-    ax.axvspan(53384.36-MJD_REF,53428.51-MJD_REF,alpha=0.05, color='gray')
+    ax.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
+    ax.axvspan(53384.36-MJD_REF,53403.51-MJD_REF,alpha=0.2, color='gray')
     #ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 
@@ -184,8 +184,8 @@ fig, ax_iron = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
 # ax_iron=ax.twinx()
 ax_iron.set_ylabel('Iron line norm, \n $10^{3}$ ph $cm^{-2}$ $s^{-1}$',color='k')
 ax_iron.set_yscale('log')
-ax.axvspan(53340.29-MJD_REF,53360.00-MJD_REF,alpha=0.05, color='gray')
-ax.axvspan(53384.36-MJD_REF,53428.51-MJD_REF,alpha=0.05, color='gray')
+ax_iron.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
+ax_iron.axvspan(53384.36-MJD_REF,53428.51-MJD_REF,alpha=0.2, color='gray')
 
 for model in ['edge_cutoffpl','cutoffpl']:
 
@@ -206,7 +206,7 @@ plt.savefig(savepath+f'flux_cont_and_iron.png',dpi=500)
 
 for model in ['edge_cutoffpl','cutoffpl']:
 
-    fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=[8, 8/2])
+    fig, ax = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=[6.6,6.6])
 
     time=ObsParams.MJD_START-MJD_REF
 
@@ -273,7 +273,7 @@ time=ObsParams.MJD_START-MJD_REF
 
 tau,tau_err=vals_and_errors(ObsParams,'edge_cutoffpl_edgeTau',funct=lambda x: x*100)
 
-ax.errorbar(time,tau,tau_err,fmt='.',color='r',marker='o',ms=4,alpha=0.8,uplims=tau_err[1]==0)
+ax.errorbar(time,tau,tau_err,fmt='.',color='r',marker='s',ms=4,alpha=0.8,uplims=tau_err[1]==0)
 
 ax.set_ylabel('K-edge $\\tau$, 10$^{-2}$',color='r')
 ax.set_xlabel(f'Time, MJD-{MJD_REF}')
@@ -282,7 +282,7 @@ ax.set_xlabel(f'Time, MJD-{MJD_REF}')
 ax.set_ylim(-0.2,5)
 
 ax_flux=ax.twinx()
-flux,flux_err=vals_and_errors(ObsParams,model+'_cutoffpl_flux',funct=lambda x: x/1e-8)
+flux,flux_err=vals_and_errors(ObsParams,'edge_cutoffpl_cutoffpl_flux',funct=lambda x: x/1e-8)
 
 ax_flux.errorbar(time,flux,flux_err,fmt='.',color='gray',marker='o',ms=4,alpha=0.4)
 
@@ -293,7 +293,7 @@ ax_flux.set_yscale('log')
 
 fig.tight_layout()
 plt.savefig(savepath+f'tau_edge_cutoffpl.pdf',dpi=500)
-plt.savefig(savepath+f'tau_edge_cutoffpl.png',dpi=500)
+#plt.savefig(savepath+f'tau_edge_cutoffpl.png',dpi=500)
 
 
 
@@ -383,8 +383,8 @@ cols=3
 ax_del_no_gauss=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
 ax_del_no_edge = plt.subplot2grid((rows,cols), (2, 0), rowspan=1, colspan=3,sharex=ax_del_no_gauss)
 ax_del_edge=plt.subplot2grid((rows,cols), (3, 0), rowspan=1, colspan=3,sharex=ax_del_no_gauss)
-
-for ObsID,color in zip(['90089-11-05-08G','90089-11-04-02G','90089-22-01-00G','90427-01-03-14G'],['b','g','r','m']):
+#'90089-11-05-08G','90089-11-04-02G' '90089-22-01-00G','90427-01-03-14G'
+for ObsID,color in zip(['90089-11-05-08G','90427-01-03-00','90089-11-01-04','90089-11-02-03G'],['b','g','r','m']):
         label=ObsID
         del_no_gauss=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl_no_gauss/mean_spe_del.dat')
         ax_del_no_gauss.errorbar(del_no_gauss[0],del_no_gauss[1],del_no_gauss[2],del_no_gauss[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
@@ -396,6 +396,7 @@ for ObsID,color in zip(['90089-11-05-08G','90089-11-04-02G','90089-22-01-00G','9
         ax_del_edge.errorbar(del2[0],del2[1],del2[2],del2[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
 
 ax_del_no_gauss.legend()
+ax_del_no_gauss.grid('y')
 ax_del_no_gauss.set_ylabel('$\Delta \chi$ \n cutoffpl',fontsize=8)
 ax_del_no_edge.set_ylabel('$\Delta \chi$ \n cutoffpl+gauss',fontsize=8)
 ax_del_no_edge.grid('y')
@@ -406,6 +407,83 @@ ax_del_no_gauss.set_xscale('log')
 #fig.tight_layout()
 plt.savefig(savepath+f'edge_residuals.png',dpi=250)
 
+
+
+#%% plot ratio before and after edge (and gauss),
+
+#print(ObsParams.cutoffpl_chi2-ObsParams.edge_cutoffpl_chi2>0.5)
+
+fig = plt.figure(figsize=(6.6, 6.6))
+plt.subplots_adjust(hspace=0)
+
+plt.subplots_adjust(left=0.15)
+plt.subplots_adjust(top=0.95)
+plt.subplots_adjust(right=0.95)
+plt.subplots_adjust(bottom=0.08)
+
+rows=4
+cols=3
+
+ax_del_no_gauss=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+ax_del_no_edge = plt.subplot2grid((rows,cols), (2, 0), rowspan=1, colspan=3,sharex=ax_del_no_gauss)
+ax_del_edge=plt.subplot2grid((rows,cols), (3, 0), rowspan=1, colspan=3,sharex=ax_del_no_gauss)
+#'90089-11-05-08G','90089-11-04-02G' '90089-22-01-00G','90427-01-03-14G'
+for ObsID,color in zip(['90089-11-05-08G','90427-01-03-00','90089-11-02-03G'],['b','g','r','m']):
+        label=ObsID
+        del_no_gauss=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl_no_gauss/mean_spe_rat.dat')
+        ax_del_no_gauss.errorbar(del_no_gauss[0],del_no_gauss[1],del_no_gauss[2],del_no_gauss[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl/mean_spe_ra.dat')
+        ax_del_no_edge.errorbar(del1[0],del1[1],del1[2],del1[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+        del2=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/edge_cutoffpl/mean_spe_ra.dat')
+        ax_del_edge.errorbar(del2[0],del2[1],del2[2],del2[3],drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+ax_del_no_gauss.legend()
+ax_del_no_gauss.grid('y')
+ax_del_no_gauss.set_ylabel('$\\frac{data}{cutoffpl}$',fontsize=12)
+ax_del_no_edge.set_ylabel('$\\frac{data}{cutoffpl+gauss}$',fontsize=12)
+ax_del_no_edge.grid('y')
+ax_del_edge.set_ylabel('$\\frac{data}{(cutoffpl+gauss)*edge}$',fontsize=12)
+ax_del_edge.grid('y')
+ax_del_edge.set_xlabel('Energy, keV')
+ax_del_no_gauss.set_xscale('log')
+#fig.tight_layout()
+plt.savefig(savepath+f'edge_ratio.pdf',dpi=250)
+
+
+
+#%% plot ratio before and after edge (and gauss), only first pane
+
+#print(ObsParams.cutoffpl_chi2-ObsParams.edge_cutoffpl_chi2>0.5)
+
+fig = plt.figure(figsize=(6.6, 6.6/2))
+plt.subplots_adjust(hspace=0)
+
+plt.subplots_adjust(left=0.15)
+plt.subplots_adjust(top=0.95)
+plt.subplots_adjust(right=0.95)
+plt.subplots_adjust(bottom=0.15)
+
+rows=1
+cols=3
+
+ax_del_no_gauss=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+#'90089-11-05-08G','90089-11-04-02G' '90089-22-01-00G','90427-01-03-14G'
+for ObsID,color in zip(['90089-11-05-08G','90089-11-04-02G'],['b','g','r','m']):
+        label=ObsID
+        del_no_gauss=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl_no_gauss/mean_spe_rat.dat')
+        ax_del_no_gauss.errorbar(del_no_gauss[0],del_no_gauss[1],del_no_gauss[2],del_no_gauss[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+ax_del_no_gauss.legend()
+ax_del_no_gauss.grid('y')
+ax_del_no_gauss.axhline(1,color='k',zorder=0)
+ax_del_no_gauss.set_ylabel('$\\frac{data}{cutoffpl}$',fontsize=15)
+ax_del_no_gauss.set_xscale('log')
+ax_del_no_gauss.set_xlabel('Energy, keV')
+
+#fig.tight_layout()
+plt.savefig(savepath+f'edge_ratio.pdf',dpi=250)
 
 
 
@@ -450,31 +528,176 @@ for model in ['cutoffpl_','edge_cutoffpl_']:
 
 
 
-#%% astropy units: calculating tau
+# #%% astropy units: calculating tau
+# import astropy
+# from astropy import units as u
+# from astropy import constants as c
+
+# from astropy.units import cds
+# cds.enable()
+# mu_cosm=0.615
+
+# def Mdot(L38,R6=1,Msun=1.4):
+#     tmp=((L38*10**38*(u.erg/u.s))*(R6*10**6*u.cm))/((Msun*c.M_sun)*(c.G)).cgs
+#     return tmp.to(u.g/u.s)
+
+
+# def R_M(L38,Msun=1.4,R6=1,B12=2.5,ksi=0.5):
+#     tmp=7*10**(7)*u.cm*ksi*(Msun)**(1/7)*(R6)**(10/7)*(B12)**(4/7)*(0.1*L38)**(-2/7)
+#     return tmp
+
+
+
+# def vff(R,Msun=1.4):
+#     tmp=(2*c.G*Msun*c.M_sun/R)**(1./2)
+#     return tmp.cgs
+
+
+# def tau_e_exp(L38,R6=1,Msun=1.4,B12=2.5,dphi=1/4,ksi=0.5):
+#     rm=R_M(L38,Msun,R6,B12,ksi=ksi)
+#     tmp=(Mdot(L38,Msun,Msun)*(c.sigma_T.cgs/(mu_cosm*c.m_p.cgs)))/(4*np.pi*dphi * (vff(rm,Msun) * rm ) )
+#     return tmp
+
+
+
+# L38_axis=np.linspace(1,5,50)
+
+# fig,ax=plt.subplots()
+# ax.errorbar(2, 0.05,0.01,color='k',label='data, group 2')
+# ax.plot(L38_axis,(L38_axis/10)**(8./7)*(2.5)**(-2./7),color='k',label='M17, t_e(0), B12=2.5, ksi=0.5')
+# ax.grid()
+# for Mns,Rns,ksi in zip([1.4,1.4],[1,1],[1,0.5]):
+#     label=f"MNs={Mns}*M_sun; Rns={Rns}*10^6 cm, ksi={ksi}"
+#     ax.loglog(L38_axis,tau_e_exp(L38_axis,R6=Rns,Msun=Mns,ksi=ksi,B12=2.5,dphi=1),label=label,ls='--')
+#     ax.set_xlabel('L, 10^38 erg/s')
+#     ax.set_ylabel('Tau_e')
+#     ax.legend()
+
+
+# plt.show()
+
+
+
+#%% astropy units: calculating tau with constant NS pars
 import astropy
 from astropy import units as u
+from astropy import constants as c
+
 from astropy.units import cds
 cds.enable()
-k_e=0.34*(u.cm)**2/u.g
+mu_cosm=0.615
 
-def Mdot(L38,R6=1,Msun=1.4):
-    tmp=((L38*10**38*(u.erg/u.s))*(R6*10**6*u.cm))/((Msun*u.M_sun)*(u.cds.G)).cgs
+def Mdot(L38):
+
+    tmp=((L38*10**38*(u.erg/u.s))*(10**6*u.cm))/((1.4*c.M_sun.cgs)*(c.G.cgs)).cgs
     return tmp.to(u.g/u.s)
 
 
-def R_M(L38,Msun=1.4,R6=1,B12=2.5,L=0.5):
-    #tmp=L*(Msun*u.M_sun)**(1/7)*(R6*10**6*u.cm)**(10/7)*(B12*10**12*u.G)**(4/7)*(0.1*L38*10**38*(u.erg/u.s))**(-2/7)
-    tmp=7*10**(7)*u.cm*L*(Msun)**(1/7)*(R6)**(10/7)*(B12)**(4/7)*(0.1*L38)**(-2/7)
+def R_M(L38,B12,ksi):
+    tmp=7*10**(7.)*u.cm*ksi*(1.4)**(1./7)*(B12)**(4/7)*(0.1*L38)**(-2/7)
     return tmp
 
-def vff(R,Msun=1.4):
-    tmp=(2*u.cds.G*Msun*u.Msun/R)**(1/2)
+def R_M_Frank(L38,B12,ksi):
+    return 2.9*10**(8.)*u.cm*ksi*(1.4)**(1./7)*(B12)**(4/7)*(10*L38)**(-2./7)
+
+
+def vff(R):
+    tmp=(2*c.G.cgs*1.4*c.M_sun.cgs/R)**(1./2)
     return tmp.cgs
 
 
-def tau_fe_exp(L38,R6=1,Msun=1.4,B12=2.5,dphi=1/3,L=0.5,Z_fe=1):
-    rm=R_M(Msun,R6,B12,L38,L=L)
-    tmp=(Mdot(L38,Msun,Msun)*k_e)/(4*np.pi*dphi * (vff(rm,Msun) * rm ) )
-    return tmp*2*Z_fe
+def tau_e_exp(L38,B12,dphi,ksi):
+    rm=R_M_Frank(L38,B12,ksi)
+    tmp=(0.5*Mdot(L38)*(c.sigma_T.cgs/(mu_cosm*c.m_p.cgs)))/(2*np.pi*dphi * (vff(rm) * rm ) )
+    return tmp
+
+
+
+L38_axis=np.linspace(1,10,50)
+B12=2.5
+dphi=0.25
+
+fig,ax=plt.subplots()
+#ax.errorbar(2, 0.05,0.01,color='k',label='data, group 2')
+ax.axvline(2,color='k',lw=0.4,ls='-.')
+ax.plot(L38_axis,(L38_axis/10)**(8./7)*(B12)**(-2./7)/dphi,color='k',label=f'Mushtukov 17, t_e(0), B12={B12}, ksi=1, dphi={dphi}')
+ax.grid()
+for ksi in zip([1,0.5]):
+    label=f"ksi={ksi}"
+    ax.loglog(L38_axis,tau_e_exp(L38_axis,ksi=ksi,B12=B12,dphi=dphi),label=label,ls='--')
+    ax.set_xlabel('L, 10^38 erg/s')
+    ax.set_ylabel('Tau_e')
+    ax.legend()
+
+
+plt.show()
+
+
+
+#%% like ENDO+YOSHIDA
+
+L38=2
+dphi_obs=1/4*2*pi
+
+R_m=R_M(L38,ksi=1).value
+M_dot=Mdot(L38).value
+r=np.logspace(6,np.log10(R_m)+0.1,100)
+mu_cosm=0.615
+
+
+def v(r):
+    return vff(r*u.cm).value
+
+def d(r,da=1e6,gamma=2.):
+    return da*(r/R_m)**(gamma-1)
+def w(r):
+    return dphi_obs*r
+
+def s(r,da=1e6,gamma=2.):
+    return d(r,da,gamma)*w(r)
+
+def n(r,da=1e6*u.cm,gamma=2.):
+    return (M_dot/2)/(v(r)*s(r,da,gamma)*mu_cosm*c.m_p.cgs.value)
+
+
+gamma=3
+da=1e4
+fig,ax=plt.subplots(7,figsize=(8,15),sharex=True)
+fig.subplots_adjust(hspace=0.2)
+ax[0].set_title(f"gamma={gamma}, d_A={da/1e5}*10^5 cm")
+# ax[0].loglog(r,100*vff(r*u.cm).cgs.value/c.c.cgs)
+# ax[0].set_ylabel('$v(r)/c,$ %')
+
+ax[0].loglog(r,w(r))
+ax[0].axhline(dphi_obs*R_m,color='r',ls=':',label=f'w=dphi(=1/4)*2*pi*R_m')
+
+ax[0].set_ylabel('w(r), cm')
+
+ax[1].loglog(r,d(r*u.cm,gamma=gamma,da=da))
+ax[1].set_ylabel('d, cm')
+
+ax[2].loglog(r,s(r*u.cm,gamma=gamma,da=da))
+ax[2].set_ylabel('s, $cm^{2}$')
+
+ax[3].loglog(r,n(r,gamma=gamma,da=da))
+ax[3].set_ylabel('n, cm$^{-3}$')
+
+
+ax[4].loglog(r,n(r,gamma=gamma,da=da)*d(r,gamma=gamma,da=da)*c.sigma_T.cgs.value)
+ax[4].set_ylabel('$\\tau=$n(r)*d(r)*$\sigma_{T}$')
+ax[4].axhline(0.1,color='g',ls='-.')
+
+ax[5].loglog(r,L38*1e38/(n(r,gamma=gamma,da=da)*r*r))
+ax[5].axhline(44.7,color='r',ls='-.')
+ax[5].set_ylabel('ksi =L/n(r)r^2')
+# ax[5].loglog(r,2*vff(r*u.cm).value*n(r)*s(r)*mu_cosm*c.m_p.cgs.value)
+# ax[5].loglog(r,M_dot*np.ones(r.shape),color='r',ls=':')
+# ax[5].set_ylabel('$\dot{M}(r)$')
+
+for axis in ax:
+    axis.legend()
+    axis.set_xlabel('r')
+    axis.axvline(R_m,color='turquoise',lw=3,ls='-.')
+    axis.axvline(1.5e6,color='turquoise',lw=3,ls='-.')
 
 
