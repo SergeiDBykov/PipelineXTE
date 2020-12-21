@@ -98,19 +98,19 @@ gr7=['90014-01-03-020','90014-01-03-02','90014-01-03-03']
 
 def set_group(row):
     if row['ObsID'] in gr1:
-        return 'i'
+        return 'I'
     elif row['ObsID'] in gr2:
-        return 'ii'
+        return 'II'
     elif row['ObsID'] in gr3:
-        return 'iii'
+        return 'III'
     elif row['ObsID'] in gr4:
-        return 'iv'
+        return 'IV'
     elif row['ObsID'] in gr5:
-        return 'v'
+        return 'V'
     elif row['ObsID'] in gr6:
-        return 'vi'
+        return 'VI'
     elif row['ObsID'] in gr7:
-        return 'vii'
+        return 'VII'
     else:
         return '-'
 
@@ -142,9 +142,9 @@ for model in ['edge_cutoffpl','cutoffpl']:
 
     flux,flux_err=vals_and_errors(ObsParams,model+'_cutoffpl_flux',funct=lambda x: x/1e-8)
 
-    ax.errorbar(time,flux,flux_err,fmt='.',color='b',marker='o',ms=4,alpha=0.8)
+    ax.errorbar(time,flux,flux_err,fmt='.',color='r',marker='o',alpha=0.8)
 
-    ax.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='b')
+    ax.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='r')
     ax.set_xlabel(f'Time, MJD-{MJD_REF}')
     ax.set_yscale('log')
 
@@ -153,15 +153,20 @@ for model in ['edge_cutoffpl','cutoffpl']:
     ax_iron=ax.twinx()
     flux_iron,flux_err_iron=vals_and_errors(ObsParams,model+'_norm_line',funct=lambda x: x/1e-3)
 
-    ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',color='g',marker='s',ms=4,alpha=0.6,zorder=-1)
+    ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',color='g',marker='s',alpha=0.6,zorder=-1)
 
 
-    ax_iron.set_ylabel('Iron line norm, \n $10^{-3}$ ph $cm^{-2}$ $s^{-1}$',color='g')
+    ax_iron.set_ylabel('Iron line flux, \n $10^{-3}$ ph $cm^{-2}$ $s^{-1}$',color='g')
     ax_iron.set_yscale('log')
 
 
-    ax.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
-    ax.axvspan(53384.36-MJD_REF,53403.51-MJD_REF,alpha=0.2, color='gray')
+    #ax.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
+    #ax.axvspan(53384.36-MJD_REF,53403.51-MJD_REF,alpha=0.2, color='gray')
+    ax.hlines(0.3,53354-MJD_REF,53355-MJD_REF,alpha=1, color='k',lw=3)
+    ax.hlines(0.3,53384.36-MJD_REF,53403.51-MJD_REF,alpha=1, color='k',lw=3)
+    #ax.text(0.3,53390,'phase-resolved')
+
+
     #ax.axvspan(53380,53380.8,alpha=0.05,color='gray')
 
 
@@ -172,30 +177,22 @@ for model in ['edge_cutoffpl','cutoffpl']:
 
 
 
-fig, ax_iron = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
+# fig, ax_iron = plt.subplots(1,gridspec_kw={'hspace': 0, 'wspace': 0})
 
-# flux,flux_err=vals_and_errors(ObsParams,'edge_cutoffpl'+'_cutoffpl_flux',funct=lambda x: x/1e-8)
-# ax.errorbar(time,flux,flux_err,fmt='.',color='g',marker='s',ms=4,alpha=0.8)
-# ax.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='g')
-# ax.set_xlabel(f'Time, MJD-{MJD_REF}')
-# ax.set_yscale('log')
+# ax_iron.set_ylabel('Iron line norm, \n $10^{3}$ ph $cm^{-2}$ $s^{-1}$',color='k')
+# ax_iron.set_yscale('log')
+# ax_iron.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
+# ax_iron.axvspan(53384.36-MJD_REF,53428.51-MJD_REF,alpha=0.2, color='gray')
 
-# ax.set_ylim(0.1,5)
-# ax_iron=ax.twinx()
-ax_iron.set_ylabel('Iron line norm, \n $10^{3}$ ph $cm^{-2}$ $s^{-1}$',color='k')
-ax_iron.set_yscale('log')
-ax_iron.axvspan(53354-MJD_REF,53355-MJD_REF,alpha=0.2, color='gray')
-ax_iron.axvspan(53384.36-MJD_REF,53428.51-MJD_REF,alpha=0.2, color='gray')
+# for model in ['edge_cutoffpl','cutoffpl']:
 
-for model in ['edge_cutoffpl','cutoffpl']:
+#     flux_iron,flux_err_iron=vals_and_errors(ObsParams,model+'_norm_line',funct=lambda x: x/1e-3)
+#     ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',marker='s',ms=4,alpha=0.6,zorder=-1,label=model)
+#     fig.tight_layout()
 
-    flux_iron,flux_err_iron=vals_and_errors(ObsParams,model+'_norm_line',funct=lambda x: x/1e-3)
-    ax_iron.errorbar(time,flux_iron,flux_err_iron,fmt='.',marker='s',ms=4,alpha=0.6,zorder=-1,label=model)
-    fig.tight_layout()
-
-ax_iron.legend()
-plt.savefig(savepath+f'flux_cont_and_iron.pdf',dpi=500)
-plt.savefig(savepath+f'flux_cont_and_iron.png',dpi=500)
+# ax_iron.legend()
+# plt.savefig(savepath+f'flux_cont_and_iron.pdf',dpi=500)
+# plt.savefig(savepath+f'flux_cont_and_iron.png',dpi=500)
 
 
 
@@ -487,6 +484,119 @@ plt.savefig(savepath+f'edge_ratio.pdf',dpi=250)
 
 
 
+
+#%% plot ratio before and after edge (and gauss), only first pane, edge and no-edge observations
+print(ObsParams[['edge_cutoffpl_edgeTau','EXPOSURE']])
+
+fig = plt.figure(figsize=(6.6, 6.6/2))
+plt.subplots_adjust(hspace=0)
+
+plt.subplots_adjust(left=0.15)
+plt.subplots_adjust(top=0.95)
+plt.subplots_adjust(right=0.95)
+plt.subplots_adjust(bottom=0.15)
+
+rows=1
+cols=3
+
+ax_del_no_gauss=plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+#'90089-11-05-08G','90089-11-04-02G' '90089-22-01-00G','90427-01-03-14G'
+for ObsID,color in zip(['90089-11-02-02','90089-11-02-03','90089-11-02-03G','90089-11-03-01G'],['b','g','r','m']):
+        label=ObsID
+        del_no_gauss=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/pcu2_top/cutoffpl_no_gauss/mean_spe_rat.dat')
+        ax_del_no_gauss.errorbar(del_no_gauss[0],del_no_gauss[1],del_no_gauss[2],del_no_gauss[3],label=label,drawstyle='steps-mid',ls=':',alpha=0.6,color=color)
+
+ax_del_no_gauss.legend()
+ax_del_no_gauss.grid('y')
+ax_del_no_gauss.axhline(1,color='k',zorder=0)
+ax_del_no_gauss.set_ylabel('$\\frac{data}{cutoffpl}$',fontsize=15)
+ax_del_no_gauss.set_xscale('log')
+ax_del_no_gauss.set_xlabel('Energy, keV')
+
+#fig.tight_layout()
+#plt.savefig(savepath+f'edge_ratio.pdf',dpi=250)
+
+
+
+#%% plot ratio before and after edge (and gauss), only first pane,ratio to fixed model and K-edge
+print(ObsParams[['edge_cutoffpl_edgeTau','EXPOSURE']])
+
+fig = plt.figure(figsize=(6,6))
+plt.subplots_adjust(wspace=0.05)
+plt.subplots_adjust(hspace=1)
+dh=0.1
+matplotlib.rcParams['figure.subplot.left']=dh
+matplotlib.rcParams['figure.subplot.bottom']=dh
+matplotlib.rcParams['figure.subplot.right']=1-dh
+matplotlib.rcParams['figure.subplot.top']=1-dh
+
+rows=5
+cols=3
+
+ax_edge = plt.subplot2grid((rows,cols), (0, 0), rowspan=3, colspan=3)
+ax_rat = plt.subplot2grid((rows,cols), (3, 0), rowspan=2, colspan=2)
+
+
+
+#fig, [ax_edge,ax_rat] = plt.subplots(2,gridspec_kw={'hspace': 0, 'wspace': 0},figsize=[8, 8])
+
+time=ObsParams.MJD_START-MJD_REF
+
+tau,tau_err=vals_and_errors(ObsParams,'edge_cutoffpl_edgeTau',funct=lambda x: x*100)
+
+ax_edge.errorbar(time,tau,tau_err,fmt='.',color='k',marker='s',ms=4,alpha=0.8,uplims=tau_err[1]==0)
+
+ax_edge.set_ylabel('K-edge $\\tau$, 10$^{-2}$',color='k')
+ax_edge.set_xlabel(f'Time, MJD-{MJD_REF}')
+#ax.set_yscale('log')
+
+ax_edge.set_ylim(-0.2,5)
+ax_edge.grid()
+
+# ax_flux=ax_edge.twinx()
+# flux,flux_err=vals_and_errors(ObsParams,'edge_cutoffpl_cutoffpl_flux',funct=lambda x: x/1e-8)
+
+# ax_flux.errorbar(time,flux,flux_err,fmt='.',color='gray',marker='o',ms=4,alpha=0.4)
+
+
+# ax_flux.set_ylabel('Flux (3-12 keV), \n $10^{-8}$ cgs',color='gray')
+# ax_flux.set_yscale('log')
+
+
+for ObsID_fixed,color in zip(['90089-11-02-03','90089-11-03-01G','90427-01-04-02'],['b','r','g','c']):
+        mjd=ObsParams[ObsParams.ObsID==ObsID_fixed].MJD_START.values[0]-MJD_REF
+        label=ObsID_fixed+f"\n (MJD {'%.2f'%mjd})"
+
+        ra_fixed_po=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID_fixed}/products/pcu2_top/cutoffpl/mean_spe_rat_mo_fixed_05.dat')
+        ax_rat.errorbar(ra_fixed_po[0],ra_fixed_po[1],ra_fixed_po[2],ra_fixed_po[3],markersize=5,marker='s',lw=1,label=label,alpha=0.6,color=color)
+        ax_edge.axvline(mjd,color=color,lw=5,ls='--')
+        #ax_rat.text(3.5,1.01,'cutoffpl  ($\Gamma=-0.5$,$E_{cut}$=6 keV)',fontsize=12)
+
+ax_rat.legend(bbox_to_anchor=(1.05, 1))
+ax_rat.grid('y')
+ax_rat.axhline(1,color='k',zorder=0)
+ax_rat.set_ylabel('data/cutoffpl \n Г =-0.5,cut=6 keV',fontsize=10)
+ax_rat.set_xscale('log')
+ax_rat.set_xlabel('Energy, keV')
+ax_rat.set_ylim(0.9,1.1)
+
+fig.tight_layout()
+plt.savefig(savepath+f'tau_edge_cutoffpl.pdf',dpi=500)
+
+#%% spe ratio:
+
+ObsID_1='90089-11-03-01G'
+ObsID_2='90089-11-02-03'
+
+data_1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID_1}/products/pcu2_top/lda.dat',skip_header=3)
+data_2=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID_2}/products/pcu2_top/lda.dat',skip_header=3)
+
+plt.loglog(data_1[:,0],data_1[:,2])
+plt.loglog(data_2[:,0],data_2[:,2])
+
+figure()
+
+plt.semilogx(data_1[:,0],data_1[:,2]/data_2[:,2])
 
 #%% latex table
 from Misc.TeX_Tables import pandas_to_tex

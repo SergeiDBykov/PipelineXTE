@@ -275,7 +275,7 @@ def plot_ph_res_results(ObsID='90089-11-03-01G',model='cutoffpl',roll=0,plot_evo
     ax_norm.errorbar(phase,norm_line*1e3,norm_line_err*1e3,color='turquoise',drawstyle='steps-mid',alpha=0.6)
     #mo_norm,_,chi2_red,_=fit_const_chi_square(norm_line*1000,1000*norm_line_err.max(axis=0))
     #ax_norm.axhline(mo_norm,alpha=0.3,ls=':')
-    ax_norm.set_ylabel(f'Iron line norm, \n (1000 $ph cm^{-2}s^{-1}$)',fontsize=12)
+    ax_norm.set_ylabel(f'Iron line flux, \n (1000 $ph cm^{-2}s^{-1}$)',fontsize=12)
 
     ax_norm.set_title(ObsID+f'({datamode});\n {round(cts/1e6,1)} Mcts $, Model {model}, $\sigma_{{Fe}}$={sigma}, $H_N$={nh}, sys_err={sys_err*100} %',fontsize=10)
 
@@ -1743,24 +1743,24 @@ def load_and_plot_data_for_paper(ObsID,ax_eqw,ax_norm,ax_edgeTau,model='cutoffpl
 
 
     ax_norm.errorbar(phase,norm_line*1e3,norm_line_err*1e3,color='green',drawstyle='steps-mid',alpha=0.6)
-    ax_norm.set_ylabel(f'Iron line norm, \n ($10^{-3}$ $ph cm^{-2}s^{-1}$)',fontsize=12)
+    ax_norm.set_ylabel(f'Iron line flux, \n ($10^{-3}$ $ph cm^{-2}s^{-1}$)',fontsize=12)
     #ax_norm.fill_between(phase, (norm_line-norm_line_err[0])*1e3,(norm_line+norm_line_err[1])*1e3, color='g',alpha=0.1)
     title_ID=ObsID
     if title_ID=='group_1':
-        title_ID='group i'
+        title_ID='group I'
     elif title_ID=='group_2':
-        title_ID='group ii'
+        title_ID='group II'
     elif title_ID=='group_3':
-        title_ID='group iii'
+        title_ID='group III'
     elif title_ID=='group_4':
-        title_ID='group iv'
+        title_ID='group IV'
     elif title_ID=='group_5':
-        title_ID='group v'
+        title_ID='group V'
     elif title_ID=='group_6':
-        title_ID='group vi'
+        title_ID='group VI'
 
 
-    ax_norm.set_title(title_ID,fontsize=15)
+    ax_norm.set_title(title_ID+f""" (MJD {"%.1f" % mjd})""",fontsize=15)
 
 
     ax_eqw.errorbar(phase,eqw*1e3,eqw_err*1e3,color='b',drawstyle='steps-mid',alpha=0.6)
@@ -1994,7 +1994,7 @@ fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles
 
 
 
-#%% rising phase, only flux
+#%% rising phase, only flux, two obs
 
 fig = plt.figure(figsize=(16,6/2))
 
@@ -2037,6 +2037,39 @@ plt.show()
 groupid='rising'
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/paper/'+f'{groupid}_cutoffpl.pdf',dpi=300)
 
+
+
+
+#%% rising phase, only flux, one obs
+
+fig = plt.figure(figsize=(6,3))
+
+plt.subplots_adjust(wspace=0.00)
+plt.subplots_adjust(hspace=0.0)
+dh=0.2
+matplotlib.rcParams['figure.subplot.left']=0.1
+matplotlib.rcParams['figure.subplot.bottom']=0.15
+matplotlib.rcParams['figure.subplot.right']=1-0.02
+matplotlib.rcParams['figure.subplot.top']=0.9
+
+
+rows=2
+cols=3
+
+ax_efold = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
+ax_efold.text(-0.1, 1.05, 'A', transform=ax_efold.transAxes,
+            size=15, weight='bold')
+ax_efold.set_xlabel('Phase')
+ax_efold.set_ylabel('Flux 3-12 keV, $10^{-8}$ cgs')
+q=read_ph_res_results_data('90089-11-02-04','cutoffpl',0)
+ax_efold.errorbar(q[1],q[6]/1e-8,q[7]/1e-8,color='k',drawstyle='steps-mid',ls='-.',alpha=1)
+ax_efold.set_title('90089-11-02-04'+f""" (MJD {"%.1f" % q[2]})""")
+
+plt.show()
+fig.tight_layout()
+
+groupid='rising'
+fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/paper/'+f'{groupid}_cutoffpl.pdf',dpi=300)
 
 
 
@@ -2124,8 +2157,11 @@ ax_eqw.text(-0.1, 1.05, 'B', transform=ax_eqw.transAxes,
 ax_fe_norm = plt.subplot2grid((rows,cols), (2, 4), rowspan=2, colspan=3)
 ax_edgeTau = plt.subplot2grid((rows,cols), (4, 4), rowspan=2, colspan=3)
 
-load_and_plot_data_for_paper('group_4', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge',
-                             phases=[[2,3,4],[6,7,8,9,10,11,12,13,14,15]])
+#load_and_plot_data_for_paper('group_4', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge',
+#                             phases=[[2,3,4],[6,7,8,9,10,11,12,13,14,15]])
+load_and_plot_data_for_paper('group_4', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge',)
+
+
 ax_fe_norm.set_xlabel('Phase')
 #q=read_ph_res_results_data('group_4','cutoffpl',0)
 #ax_eqw.errorbar(q[1],q[16]*1e3,q[17]*1e3,color='darkgreen',drawstyle='steps-mid',ls='-.',alpha=0.6)
@@ -2162,8 +2198,8 @@ ax_eqw.text(-0.1, 1.05, 'A', transform=ax_eqw.transAxes,
 ax_fe_norm = plt.subplot2grid((rows,cols), (2, 0), rowspan=2, colspan=3)
 ax_edgeTau = plt.subplot2grid((rows,cols), (4, 0), rowspan=2, colspan=3)
 
-load_and_plot_data_for_paper('group_5', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge',
-                             phases=[[11,12,13,14],[1,2,3,4,5,6,7,8,9]])
+load_and_plot_data_for_paper('group_5', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge')#,
+                             #phases=[[11,12,13,14],[1,2,3,4,5,6,7,8,9]])
 #q=read_ph_res_results_data('group_5','cutoffpl',0)
 #ax_eqw.errorbar(q[1],q[16]*1e3,q[17]*1e3,color='darkgreen',drawstyle='steps-mid',ls='-.',alpha=0.6)
 
@@ -2175,8 +2211,8 @@ ax_eqw.text(-0.1, 1.05, 'B', transform=ax_eqw.transAxes,
 ax_fe_norm = plt.subplot2grid((rows,cols), (2, 4), rowspan=2, colspan=3)
 ax_edgeTau = plt.subplot2grid((rows,cols), (4, 4), rowspan=2, colspan=3)
 
-load_and_plot_data_for_paper('group_6', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge',
-                             phases=[[5,6,7,8],[10,11,12,13,14,15,16]])
+load_and_plot_data_for_paper('group_6', ax_fe_norm,ax_eqw, ax_edgeTau,model='cutoffpl_edge')#,
+                             #phases=[[5,6,7,8],[10,11,12,13,14,15,16]])
 ax_fe_norm.set_xlabel('Phase')
 #q=read_ph_res_results_data('group_6','cutoffpl',0)
 #ax_eqw.errorbar(q[1],q[16]*1e3,q[17]*1e3,color='darkgreen',drawstyle='steps-mid',ls='-.',alpha=0.6)
@@ -2210,11 +2246,11 @@ ax_efold = plt.subplot2grid((rows,cols), (0, 0), rowspan=2, colspan=3)
 ax_efold.text(-0.1, 1.05, 'A', transform=ax_efold.transAxes,
             size=15, weight='bold')
 ax_efold.set_xlabel('Phase')
-ax_efold.set_title('90014-01-05-00')
 ax_efold.set_ylabel('Flux 3-12 keV, $10^{-8}$ cgs')
-q=read_ph_res_results_data('90014-01-05-00','cutoffpl',0)
+q=read_ph_res_results_data('90014-01-04-02','cutoffpl',0)
 ax_efold.errorbar(q[1],q[6]/1e-8,q[7]/1e-8,color='k',drawstyle='steps-mid',ls='-.',alpha=1)
 
+ax_efold.set_title('90014-01-04-02'+f""" (MJD {"%.1f" % q[2]})""")
 
 
 
@@ -2222,10 +2258,10 @@ ax_efold = plt.subplot2grid((rows,cols), (0, 4), rowspan=2, colspan=3)
 ax_efold.text(-0.1, 1.05, 'B', transform=ax_efold.transAxes,
             size=15, weight='bold')
 ax_efold.set_xlabel('Phase')
-ax_efold.set_title('90014-01-05-02')
 ax_efold.set_ylabel('Flux 3-12 keV, $10^{-8}$ cgs')
-q=read_ph_res_results_data('90014-01-05-02','cutoffpl',0)
+q=read_ph_res_results_data('90427-01-04-05','cutoffpl',0)
 ax_efold.errorbar(q[1],q[6]/1e-8,q[7]/1e-8,color='k',drawstyle='steps-mid',ls='-.',alpha=1)
+ax_efold.set_title('90014-01-04-02'+f""" (MJD {"%.1f" % q[2]})""")
 
 plt.show()
 
@@ -2240,7 +2276,7 @@ fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles
 #%% confidence intervals
 
 
-fig,ax_steppar = plt.subplots(figsize=(4,2))
+fig,ax_steppar = plt.subplots(figsize=(5,5))
 
 groupid='group_2'
 plot_cl(groupid,'average_phase_all_one_dip_all_off_dip',ax_steppar)
@@ -2251,11 +2287,31 @@ ax_steppar.grid()
 #ax_steppar.legend()
 ax_steppar.set_ylabel('$\Delta\chi^2 $')
 ax_steppar.set_xlabel('$\\tau\\times100$')
-ax_steppar.set_title('group ii')
+ax_steppar.set_title('group II')
 #plt.title(f'{ObsID}, {folder}')
 plt.tight_layout()
 plt.show()
 fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/paper/'+f'{groupid}conf_int.pdf',dpi=300)
+
+
+
+
+fig,ax_steppar = plt.subplots(figsize=(5,5))
+
+groupid='group_1'
+plot_cl(groupid,'average_phase_all_one_dip_all_off_dip',ax_steppar)
+
+ax_steppar.set_ylim(0,20)
+ax_steppar.set_xlim(0.1,10)
+ax_steppar.grid()
+#ax_steppar.legend()
+ax_steppar.set_ylabel('$\Delta\chi^2 $')
+ax_steppar.set_xlabel('$\\tau\\times100$')
+ax_steppar.set_title('group I')
+#plt.title(f'{ObsID}, {folder}')
+plt.tight_layout()
+plt.show()
+#fig.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/paper/'+f'{groupid}conf_int.pdf',dpi=300)
 
 
 
@@ -2309,7 +2365,7 @@ def plot_ph_res_results_github(ObsID,model):
     ax_norm.errorbar(phase,norm_line*1e3,norm_line_err*1e3,color='green',drawstyle='steps-mid',alpha=0.6)
     #mo_norm,_,chi2_red,_=fit_const_chi_square(norm_line*1000,1000*norm_line_err.max(axis=0))
     #ax_norm.axhline(mo_norm,alpha=0.3,ls=':')
-    ax_norm.set_ylabel(f'Iron line norm, \n ($10^{-3}$ $ph cm^{-2}s^{-1}$)',fontsize=12,color='g')
+    ax_norm.set_ylabel(f'Iron line flux, \n ($10^{-3}$ $ph cm^{-2}s^{-1}$)',fontsize=12,color='g')
 
     ax_norm.set_title(ObsID+f" (MJD {'%.1f'%mjd})",fontsize=10)
 
@@ -2390,7 +2446,7 @@ def plot_ph_res_results_github_pulse_profiles(ObsID,model='cutoffpl'):
             edgeTau,edgeTau_err,
             chi2,
             sigma,
-            eqw,eqw_err,nh,sys_err]=read_ph_res_results_data(ObsID,model,roll)
+            eqw,eqw_err,nh,sys_err]=read_ph_res_results_data(ObsID,model,roll=1)
     sigma=np.mean(sigma)
     nh=np.mean(nh)
     sys_err=np.mean(sys_err)
@@ -2431,3 +2487,120 @@ ObsList=ObsList_SA+['group_1','group_2','group_3','group_4','group_5','group_6']
 for ObsID in ObsList:
     plot_ph_res_results_github_pulse_profiles(ObsID)
     plt.close('all')
+
+
+
+#%% plot ratio to one spectral shape
+
+
+
+def plot_cutoffpl_ratio_mo_fix(ObsID,phases,ax=None):
+    model='cutoffpl_no_gauss_mo_fix'
+    if ax==None:
+        fig,ax = plt.subplots(figsize=(8, 6))
+    else:
+        pass
+
+    for phase in phases:
+
+        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/{model}/spe_plots/ph_spe_no_gauss_ra_{phase}_mo_fixed_06.dat')
+
+
+        label=f"phase {phase} / cutoffpl (gamma=-0.6, ecut=6) "
+
+        ax.errorbar(data1[0],data1[1],data1[2],data1[3],label=label,marker='o',lw=0.5,alpha=0.8)
+        ax.set_xscale('log')
+
+    ax.legend(loc='upper left',fontsize=8)
+    ax.grid('y')
+    ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
+    ax.set_ylabel(' ratio ',fontsize=8)
+    fig.tight_layout()
+
+
+def plot_cutoffpl_ratio_mo_fix_cut7(ObsID,phases,ax=None):
+    model='cutoffpl_no_gauss_mo_fix_cut7'
+    if ax==None:
+        fig,ax = plt.subplots(figsize=(8, 6))
+    else:
+        pass
+
+    for phase in phases:
+
+        data1=np.genfromtxt(f'/Users/s.bykov/work/xray_pulsars/rxte/results/out{ObsID}/products/fasebin/{model}/spe_plots/ph_spe_no_gauss_ra_{phase}_mo_fixed_06.dat')
+
+
+        label=f"phase {phase} / cutoffpl (gamma=-0.6, ecut=7) "
+
+        ax.errorbar(data1[0],data1[1],data1[2],data1[3],label=label,marker='o',lw=0.5,alpha=0.8)
+        ax.set_xscale('log')
+
+    ax.legend(loc='upper left',fontsize=8)
+    ax.grid('y')
+    ax.axhline(1,color='k',ls=':',zorder=-10,alpha=0.6)
+    ax.set_ylabel(' ratio ',fontsize=8)
+    fig.tight_layout()
+
+
+plot_cutoffpl_ratio_mo_fix('group_2',[3,7,13])
+
+plt.show()
+
+plot_cutoffpl_ratio_mo_fix('group_1',[4,7,9,15])
+
+plt.show()
+
+
+#%% pulse profiles atlas
+ObsIDs_atlas=['90089-11-02-04','90089-11-04-04','90427-01-03-00','90014-01-03-03','90014-01-04-02','90427-01-04-05']
+
+
+fig, ax_atlas = plt.subplots(nrows=3, ncols=2, sharex=True, sharey=False, figsize=(9, 6))
+ax_atlas=ax_atlas.flatten()
+fig.subplots_adjust(right=0.96)
+
+fig.text(0.5, 0.04, 'Phase', ha='center')
+fig.text(0.04, 0.5, 'Flux 3-12 keV, $10^{-8}$ cgs', va='center', rotation='vertical')
+
+def plot_ph_res_results_atlas(ObsID,ax,letter,model='cutoffpl'):
+    [model,phase,
+            mjd,
+            tot_flux,
+            datamode,
+            cts,
+            flux312,flux312_err,
+            po,po_err,
+            ecut,ecut_err,
+            po_norm,po_norm_err,
+            eline,eline_err,
+            norm_line,norm_line_err,
+            edgeE,edgeE_err,
+            edgeTau,edgeTau_err,
+            chi2,
+            sigma,
+            eqw,eqw_err,nh,sys_err]=read_ph_res_results_data(ObsID,model,roll=1)
+    sigma=np.mean(sigma)
+    nh=np.mean(nh)
+    sys_err=np.mean(sys_err)
+
+
+    ax_efold.errorbar(phase,flux312/1e-8,flux312_err/1e-8,color='k',drawstyle='steps-mid',ls=':',alpha=0.6)
+
+    #for i in range(int(len(phase)/2)):
+    #    ax_efold.text(phase[i],min(flux312/1e-8),str(i+1),fontsize=8)
+
+
+    time=mjd#-MJD_REF
+    ax_efold.set_title(letter+'        '+ObsID+f""" (MJD {"%.1f" % time})""",fontsize=12,loc='left')
+
+
+    #fig.tight_layout()
+    plt.show()
+    return None
+
+
+for ax_efold,ObsID,letter in zip(ax_atlas,ObsIDs_atlas,['A','B','C','D','E','F']):
+    plot_ph_res_results_atlas(ObsID,ax_efold,letter)
+
+
+plt.savefig(f'/Users/s.bykov/work/xray_pulsars/rxte/plots_results/pulse_profiles/paper/atlas.pdf',dpi=100)
